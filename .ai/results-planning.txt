@@ -1,0 +1,37 @@
+<conversation_summary>
+<decisions>
+Aplikacja ma być uniwersalna, umożliwiająca tworzenie fiszek na podstawie przesłanego tekstu.
+MVP będzie obsługiwał tylko tekstowe fiszki o budowie: przód - tył.
+Użytkownicy będą mogli przeglądać, zatwierdzać lub odrzucać fiszki generowane przez AI.
+Rejestracja i logowanie będą odbywać się poprzez email i hasło, z weryfikacją emaila.
+Aplikacja nie będzie wymagać podawania dodatkowych wskazówek dla AI przed generowaniem fiszek.
+Kryterium sukcesu "75% fiszek wygenerowanych przez AI jest akceptowane przez użytkownika" dotyczy porównania zaakceptowanych vs odrzuconych fiszek AI.
+Użytkownicy nie będą mogli edytować fiszek przed ich akceptacją.
+System będzie zbierał dane dotyczące liczby wszystkich utworzonych fiszek (AI oraz ręcznie) oraz liczby fiszek stworzonych przez AI.
+</decisions>
+<matched_recommendations>
+Zaimplementować dokładny system śledzenia pochodzenia każdej fiszki (AI vs ręcznie).
+Stworzyć prosty dashboard z kluczowymi metrykami dla administratora: liczba fiszek AI vs ręcznych oraz procent akceptacji fiszek AI.
+Opracować optymalne promptowanie AI dla różnych typów tekstów wejściowych na podstawie danych testowych.
+Zdefiniować strategie poprawy wskaźnika akceptacji fiszek AI w oparciu o analizę odrzuconych fiszek.
+Zaprojektować interfejs sesji nauki z informacjami o postępie oraz statystykach nauki.
+</matched_recommendations>
+<prd_planning_summary>
+Główne wymagania funkcjonalne produktu obejmują:
+Generowanie fiszek przez AI na podstawie wprowadzonego tekstu.
+Manualne tworzenie fiszek.
+Przeglądanie, edycja i usuwanie fiszek.
+Prosty system kont użytkowników do przechowywania fiszek.
+Integracja fiszek z algorytmem powtórek.
+Kluczowe historie użytkownika i ścieżki korzystania:
+Użytkownik wprowadza tekst, klika "Stwórz fiszki", przegląda wygenerowane fiszki, zatwierdza lub odrzuca każdą z nich.
+Użytkownik może ręcznie dodać fiszkę, edytować istniejącą lub usunąć fiszkę.
+Ważne kryteria sukcesu i sposoby ich mierzenia:
+75% fiszek wygenerowanych przez AI musi być akceptowanych przez użytkowników.
+Porównanie liczby wszystkich utworzonych fiszek (AI oraz ręcznie) z liczbą fiszek stworzonych przez AI.
+Nierozwiązane kwestie lub obszary wymagające dalszego wyjaśnienia:
+Jakie konkretne dane powinny być przechowywane dla każdej fiszki w bazie danych?
+Jakie są oczekiwania dotyczące wydajności systemu (np. maksymalny czas oczekiwania na wygenerowanie fiszek)?
+</prd_planning_summary>
+</unresolved_issues>
+</conversation_summary>
