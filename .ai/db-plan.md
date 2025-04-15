@@ -1,27 +1,84 @@
-<conversation_summary>
-<decisions>
-1. Model użytkownika zostanie oparty na podstawowym zestawie pól: id, email, hashed_password, created_at, updated_at (bez dodatkowych atrybutów jak imię, nazwisko, rola, status weryfikacji).
-2. Tabela flashcards będzie przechowywać tylko zatwierdzone fiszki (zarówno generowane przez AI, jak i wprowadzone ręcznie) z dodatkową kolumną "source" wskazującą pochodzenie (AI lub manual).
-3. Historia sesji nauki zostanie oddzielona od tabeli flashcards poprzez utworzenie osobnej tabeli sesji oraz znormalizowanej tabeli pomocniczej (np. session_flashcards) według zasad 2NF lub 3NF.
-4. Zastosowane będą relacje 1:N między użytkownikami a flashcards oraz między użytkownikami a sesjami nauki, z ograniczeniem dostępu do danych tylko dla właściciela.
-5. Mechanizm RLS zostanie skonfigurowany tak, aby użytkownik miał dostęp tylko do swoich danych, natomiast administratorzy uzyskają dostęp jedynie do zagregowanych statystyk bez możliwości przeglądania szczegółowych danych.
-6. W MVP zastosujemy proste typy danych (serial/integer dla identyfikatorów, text dla treści, timestamp dla dat) oraz podstawowe ograniczenia (NOT NULL, UNIQUE, ewentualne CHECK dla "source").
-</decisions>
+# Schemat bazy danych PostgreSQL dla 10x Cards
 
-<matched_recommendations>
-1. Użycie podstawowego modelu użytkownika z niezbędnymi polami.
-2. Utworzenie tabeli flashcards z dodatkową kolumną "source" dla statystyk.
-3. Rozdzielenie historii sesji nauki od flashcards przez stworzenie oddzielnych tabel (sesje i session_flashcards) zgodnie z zasadami normalizacji.
-4. Definicja relacji 1:N między użytkownikami a flashcards oraz między użytkownikami a sesjami nauki.
-5. Implementacja RLS ograniczającego dostęp do danych do właściciela, a dla administratorów dostęp tylko do zagregowanych statystyk.
-6. Stosowanie prostych i funkcjonalnych typów danych oraz ograniczeń zgodnie z wymaganiami MVP.
-</matched_recommendations>
+## 1. Lista tabel z ich kolumnami, typami danych i ograniczeniami
 
-<database_planning_summary>
-Główne wymagania schematu bazy danych obejmują utworzenie trzech kluczowych encji: użytkownicy, flashcards oraz sesje nauki (wraz z tabelą pomocniczą łączącą flashcards z sesjami). Użytkownik posiada jedynie podstawowy zestaw pól, a flashcards przechowują informację o źródle, umożliwiającą późniejsze liczenie statystyk. Relacje między tymi encjami są definiowane jako 1:N, co zapewnia, że każdy użytkownik ma swoje fiszki i sesje. Bezpieczeństwo danych będzie wdrożone na poziomie wierszy (RLS) umożliwiając, aby użytkownicy mieli dostęp wyłącznie do swoich danych, a rola administratora miała jedynie dostęp do statystyk. Schemat korzystać będzie z prostych typów danych i ograniczeń, aby spełnić wymagania MVP bez komplikacji wynikających z dalszej skalowalności czy optymalizacji.
-</database_planning_summary>
+### 1.1. Tabela: users
+- **id**: SERIAL PRIMARY KEY  
+- **email**: TEXT NOT NULL UNIQUE  
+- **hashed_password**: TEXT NOT NULL  
+- **created_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()  
+- **updated_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 
-<unresolved_issues>
-Brak nierozwiązanych kwestii – wszystkie kluczowe decyzje i zalecenia zostały uzgodnione w ramach MVP.
-</unresolved_issues>
-</conversation_summary>
+### 1.2. Tabela: flashcards
+- **id**: SERIAL PRIMARY KEY  
+- **user_id**: INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE  
+- **front**: TEXT NOT NULL            — zawartość fiszki (przód)  
+- **back**: TEXT NOT NULL             — zawartość fiszki (tył)  
+- **source**: TEXT NOT NULL CHECK (source IN ('AI', 'manual'))  
+- **created_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()  
+- **updated_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+
+### 1.3. Tabela: sessions
+- **id**: SERIAL PRIMARY KEY  
+- **user_id**: INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE  
+- **started_at**: TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()  
+- **ended_at**: TIMESTAMP WITH TIME ZONE NULL  
+// (opcjonalnie: dodatkowe kolumny statystyczne lub status sesji)
+
+### 1.4. Tabela: session_flashcards
+Tabela pomocnicza dla relacji wiele-do-wielu między sesjami nauki a fiszkami.
+- **session_id**: INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE  
+- **flashcard_id**: INTEGER NOT NULL REFERENCES flashcards(id) ON DELETE CASCADE  
+- **status**: TEXT NULL            — np. wynik oceny fiszki (poprawnie/niepoprawnie)  
+- **reviewed_at**: TIMESTAMP WITH TIME ZONE NULL  
+- PRIMARY KEY (session_id, flashcard_id)
+
+## 2. Relacje między tabelami
+- Relacja 1:N między `users` a `flashcards` – każdy użytkownik może mieć wiele fiszek.
+- Relacja 1:N między `users` a `sessions` – każdy użytkownik może mieć wiele sesji nauki.
+- Relacja wiele-do-wielu między `sessions` i `flashcards` realizowana przez tabelę `session_flashcards`.
+
+## 3. Indeksy
+- Unikalny indeks na kolumnie `email` w tabeli `users` (implicitny przez UNIQUE).  
+- Indeks na kolumnie `user_id` w tabelach:
+  - `flashcards`:  
+    `CREATE INDEX idx_flashcards_user_id ON flashcards(user_id);`
+  - `sessions`:  
+    `CREATE INDEX idx_sessions_user_id ON sessions(user_id);`
+- Opcjonalnie, indeks na kolumnę `source` w tabeli `flashcards` dla częstszych zapytań filtrowanych według źródła:  
+  `CREATE INDEX idx_flashcards_source ON flashcards(source);`
+
+## 4. Zasady PostgreSQL (Row Level Security - RLS)
+Wdrożenie RLS umożliwia dostęp do danych tylko właścicielom (oraz administratorom do zagregowanych statystyk). Przykładowa konfiguracja:
+
+```sql
+-- Włączenie RLS dla tabel
+ALTER TABLE flashcards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+
+-- Polityka pozwalająca użytkownikowi zobaczyć tylko własne fiszki
+CREATE POLICY user_flashcards_policy ON flashcards
+    USING (user_id = current_setting('app.current_user_id')::integer);
+
+-- Polityka pozwalająca użytkownikowi zobaczyć tylko własne sesje
+CREATE POLICY user_sessions_policy ON sessions
+    USING (user_id = current_setting('app.current_user_id')::integer);
+
+-- Przykładowe polityki dla administratorów (dostęp do zagregowanych statystyk)
+CREATE POLICY admin_flashcards_policy ON flashcards
+    FOR SELECT
+    USING (current_setting('app.user_role', true) = 'admin');
+
+CREATE POLICY admin_sessions_policy ON sessions
+    FOR SELECT
+    USING (current_setting('app.user_role', true) = 'admin');
+```
+
+(Uwaga: Kluczem do wdrożenia RLS jest odpowiednia konfiguracja ustawień kontekstu aplikacji, np. `app.current_user_id` oraz `app.user_role`).
+
+## 5. Dodatkowe wyjaśnienia dotyczące decyzji projektowych
+- Schemat został zaprojektowany zgodnie z ustaleniami MVP: prosty model użytkownika, zatwierdzone fiszki z kolumną `source` oraz oddzielenie historii sesji nauki od tabeli fiszek.
+- Relacje 1:N między użytkownikami a fiszkami oraz użytkownikami a sesjami zapewniają integralność danych, zaś tabela `session_flashcards` umożliwia szczegółowe monitorowanie postępów nauki.
+- Indeksy zostały uwzględnione, aby poprawić wydajność zapytań w miarę zwiększania się danych.
+- Mechanizm RLS zabezpiecza dane, umożliwiając wyświetlanie tylko rekordów, do których użytkownik ma uprawnienia, a administratorom dostęp do zagregowanych statystyk bez możliwości przeglądania szczegółowych danych.
+- Schemat jest zoptymalizowany pod kątem technologii używanych w projekcie (PostgreSQL w ramach Supabase, Astro, TypeScript) przy zachowaniu prostoty i skalowalności.
