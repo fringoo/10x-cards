@@ -1,4 +1,5 @@
 import type { Tables } from "./db/database.types";
+import { z } from "zod";
 
 // --- Enums ---
 export type FlashcardSource = "ai" | "manual";
@@ -98,6 +99,12 @@ export interface GenerateFlashcardsCommand {
 }
 export type GeneratedFlashcardDTO = Pick<FlashcardDTO, "front" | "back">;
 export type GenerateFlashcardsResponseDTO = GeneratedFlashcardDTO[];
+
+// Zod schema for validating generate flashcards request
+export const generateFlashcardsSchema = z.object({
+  text: z.string().min(10).max(5000),
+  maxCards: z.number().int().min(1).max(20).default(10),
+});
 
 // Pagination metadata
 export interface PaginationDTO {
