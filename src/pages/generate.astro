@@ -1,0 +1,11 @@
+---
+import MainLayout from "@/layouts/Layout.astro";
+import GenerateFlashcardsForm from "@/components/GenerateFlashcardsForm.tsx";
+---
+
+<MainLayout title="Generuj Fiszki AI">
+  <div class="container mx-auto py-10">
+    <h1 class="text-3xl font-bold mb-6">Generuj fiszki za pomocą AI</h1>
+    <GenerateFlashcardsForm client:load />
+  </div>
+</MainLayout>
