@@ -205,3 +205,92 @@ export interface ErrorResponseDTO {
     details?: Record<string, unknown>;
   };
 }
+
+// --- OpenRouter Service Types ---
+export interface ModelParameters {
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+}
+
+export interface JSONSchema {
+  title?: string;
+  type: string;
+  properties?: Record<string, unknown>;
+  required?: string[];
+  additionalProperties?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ResponseFormat {
+  type: "json_schema";
+  json_schema: {
+    name: string;
+    strict: boolean;
+    schema: JSONSchema;
+  };
+}
+
+export interface Message {
+  role: "system" | "user" | "assistant";
+  content: string | MessageContent[];
+}
+
+export interface MessageContent {
+  type: "text" | "image_url" | "code";
+  text?: string;
+  image_url?: string;
+  language?: string;
+}
+
+export interface LLMResponse {
+  id: string;
+  content: string;
+  model: string;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  created: number;
+  object: string;
+}
+
+export interface LLMResponseChunk {
+  id: string;
+  content: string;
+  model: string;
+}
+
+export interface RequestPayload {
+  messages: Message[];
+  model: string;
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  response_format?: ResponseFormat;
+}
+
+export interface Model {
+  id: string;
+  name: string;
+  description?: string;
+  pricing?: {
+    prompt: number;
+    completion: number;
+  };
+  context_length?: number;
+  capabilities?: string[];
+}
+
+export interface ModelDetails extends Model {
+  provider: string;
+  parameters: {
+    available: string[];
+    default: Record<string, unknown>;
+  };
+}
