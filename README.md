@@ -60,6 +60,13 @@ cd 10x-cards
 npm install
 ```
 
+> **Note:** When switching the project between platforms (e.g. macOS M1 and Linux ARM64), before reinstalling dependencies remove `node_modules` and `package-lock.json`, then run:
+>
+> ```bash
+> rm -rf node_modules package-lock.json
+> npm install
+> ```
+
 3. Run the development server:
 
 ```bash
