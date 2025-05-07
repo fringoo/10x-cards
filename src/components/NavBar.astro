@@ -1,0 +1,46 @@
+---
+// TODO: Implement user authentication status to dynamically change links
+const isAuthenticated = false; // Mocked
+const user = null; // Mocked
+const isAdmin = false; // Mocked
+---
+
+<nav class="bg-gray-800 text-white p-4">
+  <div class="container mx-auto flex justify-between items-center">
+    <div class="text-lg font-bold">
+      <a href="/">10x Cards</a>
+    </div>
+    <div>
+      {
+        !isAuthenticated && (
+          <>
+            <a href="/login" class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href="/register" class="px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+          </>
+        )
+      }
+      {
+        isAuthenticated && user && (
+          <>
+            <a href="/" class="px-3 py-2 rounded hover:bg-gray-700">Strona główna</a>
+            <a href="/generate" class="px-3 py-2 rounded hover:bg-gray-700">Generuj fiszki</a>
+            <a href="/flashcards" class="px-3 py-2 rounded hover:bg-gray-700">Moje fiszki</a>
+            <a href="/sessions/new" class="px-3 py-2 rounded hover:bg-gray-700">Nauka</a>
+            <a href="/profile" class="px-3 py-2 rounded hover:bg-gray-700 cursor-not-allowed" title="Wkrótce">
+              Profil
+            </a>
+            {isAdmin && (
+              <a href="/admin/metrics" class="px-3 py-2 rounded hover:bg-gray-700">
+                Panel admina
+              </a>
+            )}
+            <span class="px-3 py-2">Witaj, MockUser</span>
+            <a href="/logout" class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+          </>
+        )
+      }
+    </div>
+  </div>
+</nav>
+
+<!-- TODO: Implement mobile hamburger menu --> 

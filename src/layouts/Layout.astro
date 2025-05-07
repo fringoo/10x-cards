@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import NavBar from "../components/NavBar.astro";
 
 interface Props {
   title?: string;
@@ -18,7 +19,10 @@ const { title = "10x Astro Starter" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <NavBar />
+    <main class="container mx-auto p-4">
+      <slot />
+    </main>
   </body>
 </html>
 
@@ -28,5 +32,15 @@ const { title = "10x Astro Starter" } = Astro.props;
     margin: 0;
     width: 100%;
     height: 100%;
+    background-color: #f0f2f5;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    flex-grow: 1;
   }
 </style>
