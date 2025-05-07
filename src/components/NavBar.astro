@@ -1,8 +1,14 @@
 ---
-// TODO: Implement user authentication status to dynamically change links
-const isAuthenticated = true; // Mocked
-const user = { name: "MockUser" }; // Mocked, assuming user object if authenticated
-const isAdmin = false; // Mocked
+// Odczytujemy parametr 'simulatedAuth' z URL
+const simulatedAuthParam = Astro.url.searchParams.get('simulatedAuth');
+
+// Ustawiamy isAuthenticated na podstawie parametru URL
+// Jeśli parametr nie istnieje lub ma inną wartość niż 'true', użytkownik jest wylogowany
+let isAuthenticated = simulatedAuthParam === 'true';
+
+// Pozostałe zamockowane dane, user jest potrzebny, gdy isAuthenticated jest true
+const user = isAuthenticated ? { name: "MockUser" } : null;
+const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmin przez URL jeśli potrzeba
 ---
 
 <nav class="bg-gray-800 text-white p-4">
@@ -16,7 +22,7 @@ const isAdmin = false; // Mocked
       {
         !isAuthenticated && (
           <>
-            <a href="/login" class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href={`${Astro.url.pathname}?simulatedAuth=true`} class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
             <a href="/register" class="px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
           </>
         )
@@ -37,7 +43,7 @@ const isAdmin = false; // Mocked
               </a>
             )}
             <span class="px-3 py-2">Witaj, {user.name}</span>
-            <a href="/logout" class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            <a href={`${Astro.url.pathname}?simulatedAuth=false`} class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
           </>
         )
       }
@@ -54,13 +60,12 @@ const isAdmin = false; // Mocked
   </div>
 
   {/* Mobile Menu - hidden by default, shown on mobile when active (JS later) */}
-  {/* For now, it's structurally present but hidden with 'hidden' class */}
   <div id="mobile-menu" class="hidden md:hidden">
     <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
       {
         !isAuthenticated && (
           <>
-            <a href="/login" class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href={`${Astro.url.pathname}?simulatedAuth=true`} class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
             <a href="/register" class="block px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
           </>
         )
@@ -81,7 +86,7 @@ const isAdmin = false; // Mocked
               </a>
             )}
             <span class="block px-3 py-2">Witaj, {user.name}</span>
-            <a href="/logout" class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            <a href={`${Astro.url.pathname}?simulatedAuth=false`} class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
           </>
         )
       }
@@ -91,13 +96,11 @@ const isAdmin = false; // Mocked
 
 <script>
   // Placeholder for client-side script to toggle mobile menu visibility.
-  // Actual implementation will be added later if this remains a pure Astro component,
-  // or handled by React state if it becomes a client component.
-  // const mobileMenuButton = document.getElementById('mobile-menu-button');
-  // const mobileMenu = document.getElementById('mobile-menu');
-  // mobileMenuButton?.addEventListener('click', () => {
-  //   mobileMenu?.classList.toggle('hidden');
-  // });
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  mobileMenuButton?.addEventListener('click', () => {
+    mobileMenu?.classList.toggle('hidden');
+  });
 </script>
 
 <!-- TODO: Implement mobile hamburger menu --> 
