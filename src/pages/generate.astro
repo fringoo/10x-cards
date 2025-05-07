@@ -1,11 +1,51 @@
 ---
 import MainLayout from "@/layouts/Layout.astro";
-import GenerateFlashcardsForm from "@/components/GenerateFlashcardsForm.tsx";
+import AIGenerateForm from "@/components/AIGenerateForm.tsx";
+import AIGenerateResults from "@/components/AIGenerateResults.tsx";
+import { useState } from "react";
+import type { GeneratedFlashcardDTO } from "@/types";
+
+// Ten stan będzie przechowywać wygenerowane fiszki i będzie przekazywany między komponentami
+// Na razie jest to uproszczenie, docelowo stan może być zarządzany bardziej globalnie lub poprzez Astro <script>
+let generatedFlashcards: GeneratedFlashcardDTO[] = [];
+
+const handleFlashcardsGenerated = (flashcards: GeneratedFlashcardDTO[]) => {
+  console.log("Fiszki wygenerowane w generate.astro:", flashcards);
+  // W rzeczywistej aplikacji tutaj zaktualizowalibyśmy stan,
+  // co spowodowałoby ponowne renderowanie i przekazanie danych do AIGenerateResults.
+  // W Astro, bez frameworka UI po stronie serwera zarządzającego stanem bezpośrednio w .astro,
+  // musielibyśmy to obsłużyć inaczej, np. przez atrybuty przekazywane do komponentów klienckich
+  // lub przez store po stronie klienta.
+  // Na potrzeby tego przykładu, załóżmy, że AIGenerateResults będzie pobierać te dane
+  // lub AIGenerateForm będzie je bezpośrednio przekazywał/emitował zdarzenie.
+  // Dla uproszczenia, AIGenerateResults może na razie przyjmować puste dane
+  // a integracja zostanie zaimplementowana później.
+  generatedFlashcards = flashcards;
+};
 ---
 
 <MainLayout title="Generuj Fiszki AI">
-  <div class="container mx-auto py-10">
-    <h1 class="text-3xl font-bold mb-6">Generuj fiszki za pomocą AI</h1>
-    <GenerateFlashcardsForm client:load />
+  <div class="container mx-auto py-8 px-4">
+    <h1 class="text-3xl font-bold mb-6 text-center">Generowanie Fiszki AI</h1>
+    <div class="grid grid-cols-1 gap-8">
+      <AIGenerateForm client:load />
+      <AIGenerateResults client:load generatedFlashcards={generatedFlashcards} />
+    </div>
   </div>
 </MainLayout>
+
+<script define:vars={{ generatedFlashcards }}>
+  // Logika do obsługi aktualizacji `generatedFlashcards` i przekazania do AIGenerateResults
+  // np. poprzez custom events lub bardziej zaawansowane zarządzanie stanem po stronie klienta
+  // jeśli aktualizacje mają być dynamiczne bez przeładowania strony.
+  // Na razie zostawiamy to jako placeholder.
+  // Kluczowe jest, aby AIGenerateForm mógł jakoś powiadomić AIGenerateResults
+  // lub współdzielony rodzic (tutaj strona Astro) o nowych danych.
+
+  // Przykład: AIGenerateForm może emitować zdarzenie, a AIGenerateResults nasłuchiwać
+  // document.addEventListener('flashcardsGenerated', (event) => {
+  //   const newFlashcards = event.detail.flashcards;
+  //   // Tutaj logika aktualizacji komponentu AIGenerateResults
+  //   // To jest bardziej skomplikowane w Astro bez frameworka UI dla całości
+  // });
+</script>
