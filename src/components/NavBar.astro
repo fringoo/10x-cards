@@ -1,7 +1,7 @@
 ---
 // TODO: Implement user authentication status to dynamically change links
-const isAuthenticated = false; // Mocked
-const user = null; // Mocked
+const isAuthenticated = true; // Mocked
+const user = { name: "MockUser" }; // Mocked, assuming user object if authenticated
 const isAdmin = false; // Mocked
 ---
 
@@ -10,7 +10,9 @@ const isAdmin = false; // Mocked
     <div class="text-lg font-bold">
       <a href="/">10x Cards</a>
     </div>
-    <div>
+
+    {/* Desktop Menu - hidden on small screens */}
+    <div class="hidden md:flex items-center space-x-1">
       {
         !isAuthenticated && (
           <>
@@ -34,13 +36,68 @@ const isAdmin = false; // Mocked
                 Panel admina
               </a>
             )}
-            <span class="px-3 py-2">Witaj, MockUser</span>
+            <span class="px-3 py-2">Witaj, {user.name}</span>
             <a href="/logout" class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+          </>
+        )
+      }
+    </div>
+
+    {/* Mobile Menu Button - visible on small screens */}
+    <div class="md:hidden">
+      <button id="mobile-menu-button" aria-label="Otwórz menu" class="text-white focus:outline-none hover:text-gray-300">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {/* Mobile Menu - hidden by default, shown on mobile when active (JS later) */}
+  {/* For now, it's structurally present but hidden with 'hidden' class */}
+  <div id="mobile-menu" class="hidden md:hidden">
+    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+      {
+        !isAuthenticated && (
+          <>
+            <a href="/login" class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href="/register" class="block px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+          </>
+        )
+      }
+      {
+        isAuthenticated && user && (
+          <>
+            <a href="/" class="block px-3 py-2 rounded hover:bg-gray-700">Strona główna</a>
+            <a href="/generate" class="block px-3 py-2 rounded hover:bg-gray-700">Generuj fiszki</a>
+            <a href="/flashcards" class="block px-3 py-2 rounded hover:bg-gray-700">Moje fiszki</a>
+            <a href="/sessions/new" class="block px-3 py-2 rounded hover:bg-gray-700">Nauka</a>
+            <a href="/profile" class="block px-3 py-2 rounded hover:bg-gray-700 cursor-not-allowed" title="Wkrótce">
+              Profil
+            </a>
+            {isAdmin && (
+              <a href="/admin/metrics" class="block px-3 py-2 rounded hover:bg-gray-700">
+                Panel admina
+              </a>
+            )}
+            <span class="block px-3 py-2">Witaj, {user.name}</span>
+            <a href="/logout" class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
           </>
         )
       }
     </div>
   </div>
 </nav>
+
+<script>
+  // Placeholder for client-side script to toggle mobile menu visibility.
+  // Actual implementation will be added later if this remains a pure Astro component,
+  // or handled by React state if it becomes a client component.
+  // const mobileMenuButton = document.getElementById('mobile-menu-button');
+  // const mobileMenu = document.getElementById('mobile-menu');
+  // mobileMenuButton?.addEventListener('click', () => {
+  //   mobileMenu?.classList.toggle('hidden');
+  // });
+</script>
 
 <!-- TODO: Implement mobile hamburger menu --> 
