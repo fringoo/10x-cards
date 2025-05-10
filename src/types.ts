@@ -197,6 +197,62 @@ export interface AdminMetricsDTO {
   averageSessionsPerUser: number;
 }
 
+// --- Flashcard Collection DTOs ---
+
+/**
+ * Represents a flashcard when being saved as part of a collection.
+ * Includes AI-specific review details.
+ */
+export interface FlashcardInCollectionDTO {
+  front: string;
+  back: string;
+  source: "ai"; // For now, collections are from AI-generated cards
+  aiGeneratedDetails: {
+    modified: boolean;
+    approvalStatus: "pending" | "accepted" | "rejected";
+  };
+}
+
+/**
+ * Command to save a new collection of flashcards.
+ */
+export interface SaveFlashcardCollectionCommand {
+  collectionName: string;
+  flashcards: FlashcardInCollectionDTO[];
+}
+
+/**
+ * Zod schema for validating the SaveFlashcardCollectionCommand.
+ */
+export const saveFlashcardCollectionSchema = z.object({
+  collectionName: z
+    .string()
+    .min(3, "Nazwa kolekcji musi mieć co najmniej 3 znaki.")
+    .max(100, "Nazwa kolekcji nie może przekraczać 100 znaków."),
+  flashcards: z
+    .array(
+      z.object({
+        front: z.string().min(1, "Przód fiszki nie może być pusty."),
+        back: z.string().min(1, "Tył fiszki nie może być pusty."),
+        source: z.literal("ai"),
+        aiGeneratedDetails: z.object({
+          modified: z.boolean(),
+          approvalStatus: z.enum(["pending", "accepted", "rejected"]),
+        }),
+      })
+    )
+    .min(1, "Kolekcja musi zawierać co najmniej jedną fiszkę."),
+});
+
+/**
+ * Response DTO after successfully saving a flashcard collection.
+ */
+export interface SaveFlashcardCollectionResponseDTO {
+  collectionId: string; // UUID of the newly created collection
+  message: string;
+  flashcardsSavedCount: number;
+}
+
 // Unified API error response format
 export interface ErrorResponseDTO {
   error: {

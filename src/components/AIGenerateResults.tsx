@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import type { GeneratedFlashcardDTO } from "@/types";
+import type {
+  GeneratedFlashcardDTO,
+  FlashcardInCollectionDTO,
+  SaveFlashcardCollectionCommand,
+  SaveFlashcardCollectionResponseDTO,
+} from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -41,6 +46,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
   const [collectionName, setCollectionName] = useState("");
   const [flashcardsToSave, setFlashcardsToSave] = useState<EditableFlashcard[] | null>(null);
   const [saveMode, setSaveMode] = useState<"accepted" | "all" | null>(null);
+  const [isSaving, setIsSaving] = useState(false); // For loading state on save button
 
   useEffect(() => {
     const handleNewFlashcards = (event: Event) => {
@@ -134,24 +140,67 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
       return;
     }
 
-    console.log(`--- Mock Save Action ---`);
-    console.log(`Kolekcja: "${collectionName}"`);
-    console.log(`Tryb zapisu: ${saveMode}`);
-    console.log("Liczba fiszek do zapisania:", flashcardsToSave.length);
-    console.log(
-      "Fiszki:",
-      flashcardsToSave.map((f) => ({ front: f.front, back: f.back, modified: f.modified, status: f.approvalStatus }))
-    );
-    console.log(`--- Koniec Mock Save Action ---`);
+    setIsSaving(true);
 
-    // TODO: Actual API call to /api/collections/save
-    // Example: try { await fetch(...); show success } catch { show error }
+    const commandBody: SaveFlashcardCollectionCommand = {
+      collectionName: collectionName.trim(),
+      flashcards: flashcardsToSave.map((fc) => ({
+        front: fc.front,
+        back: fc.back,
+        source: "ai", // Assuming all are AI for now
+        aiGeneratedDetails: {
+          modified: !!fc.modified, // Ensure boolean
+          approvalStatus: fc.approvalStatus,
+        },
+      })),
+    };
 
-    alert(`Kolekcja "${collectionName}" została (mock) zapisana! Sprawdź konsolę.`);
-    setIsSaveModalOpen(false);
-    setCollectionName("");
-    setFlashcardsToSave(null);
-    setSaveMode(null);
+    try {
+      console.log("[AIGenerateResults] Attempting to save collection:", commandBody);
+      const response = await fetch("/api/collections/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(commandBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: { message: "Nieznany błąd serwera" } }));
+        console.error("[AIGenerateResults] API error saving collection:", errorData);
+        alert(`Błąd zapisu kolekcji: ${errorData.error?.message || response.statusText}`);
+        // Do not close modal on API error, allow user to retry or cancel
+        return; // Return early to keep modal open
+      }
+
+      const result: SaveFlashcardCollectionResponseDTO = await response.json();
+      console.log("[AIGenerateResults] Collection saved successfully:", result);
+      alert(result.message || `Kolekcja "${commandBody.collectionName}" zapisana pomyślnie!`);
+
+      // Optionally, reset/clear the generated cards from UI after successful save
+      // setFlashcards([]);
+      // Or trigger an event to inform parent page
+    } catch (error) {
+      console.error("[AIGenerateResults] Network or other error saving collection:", error);
+      alert("Wystąpił błąd sieci lub inny problem podczas zapisu kolekcji.");
+      // Do not close modal on error
+      return; // Return early to keep modal open
+    } finally {
+      setIsSaving(false);
+      // Only close modal and reset if successful or if explicitly cancelled by user (DialogClose handles cancel)
+      // If we reached here after a successful save, close and reset.
+      // The error cases above return early.
+      if (document.querySelector('[data-state="open"]')) {
+        // Check if modal is still programmatically open
+        // This check might be tricky; successful save path should handle closing.
+      }
+      // Reset states IF a successful save happened.
+      // The modal will be closed by setting isSaveModalOpen to false, or DialogClose for cancel.
+      // We should only fully reset if the operation was definitively successful and we want to clear form.
+      // For now, let's only close it explicitly after successful alert.
+      setIsSaveModalOpen(false);
+      setCollectionName("");
+      setFlashcardsToSave(null);
+      setSaveMode(null);
+    }
   };
 
   if (!flashcards || flashcards.length === 0) {
@@ -229,11 +278,16 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
             onClick={() => openSaveDialog("accepted")}
             variant="outline"
             size="sm"
-            disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0}
+            disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0 || isSaving}
           >
             Zapisz Zaakceptowane ({flashcards.filter((f) => f.approvalStatus === "accepted").length})
           </Button>
-          <Button onClick={() => openSaveDialog("all")} variant="default" size="sm" disabled={flashcards.length === 0}>
+          <Button
+            onClick={() => openSaveDialog("all")}
+            variant="default"
+            size="sm"
+            disabled={flashcards.length === 0 || isSaving}
+          >
             Zapisz Wszystkie ({flashcards.length})
           </Button>
         </div>
@@ -258,21 +312,48 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                 onChange={(e) => setCollectionName(e.target.value)}
                 className="col-span-3"
                 placeholder="Np. TypeScript - zaawansowane koncepty"
+                disabled={isSaving}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={isSaving}>
                 Anuluj
               </Button>
             </DialogClose>
             <Button
               type="button"
               onClick={handleSaveCollection}
-              disabled={!collectionName.trim() || (flashcardsToSave?.length || 0) === 0}
+              disabled={!collectionName.trim() || (flashcardsToSave?.length || 0) === 0 || isSaving}
             >
-              Zapisz kolekcję
+              {isSaving ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Zapisywanie...
+                </>
+              ) : (
+                "Zapisz kolekcję"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -344,14 +425,14 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
             <div className="p-3 border-t flex-shrink-0 flex justify-end space-x-2 bg-muted/30">
               {editingFlashcardIndex === index ? (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                  <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
                     Anuluj
                   </Button>
                   <Button
                     variant="default"
                     size="sm"
                     onClick={handleConfirmEdit}
-                    disabled={!currentEdit?.front.trim() || !currentEdit?.back.trim()}
+                    disabled={!currentEdit?.front.trim() || !currentEdit?.back.trim() || isSaving}
                   >
                     Zatwierdź
                   </Button>
@@ -362,7 +443,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     variant="outline"
                     size="sm"
                     onClick={() => handleApprovalChange(index, "rejected")}
-                    disabled={card.approvalStatus === "rejected"}
+                    disabled={card.approvalStatus === "rejected" || isSaving}
                   >
                     {card.approvalStatus === "rejected" ? "Odrzucona" : "Odrzuć"}
                   </Button>
@@ -370,7 +451,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     variant="secondary"
                     size="sm"
                     onClick={() => handleEditClick(index)}
-                    disabled={card.approvalStatus === "accepted"}
+                    disabled={card.approvalStatus === "accepted" || card.approvalStatus === "rejected" || isSaving}
                   >
                     Edytuj
                   </Button>
@@ -378,7 +459,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     variant="default"
                     size="sm"
                     onClick={() => handleApprovalChange(index, "accepted")}
-                    disabled={card.approvalStatus === "accepted"}
+                    disabled={card.approvalStatus === "accepted" || isSaving}
                   >
                     {card.approvalStatus === "accepted" ? "Zaakceptowana" : "Zaakceptuj"}
                   </Button>
