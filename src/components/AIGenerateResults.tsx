@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 // Local interface extending GeneratedFlashcardDTO to include UI-specific state
 interface EditableFlashcard extends GeneratedFlashcardDTO {
+  id: string | number; // Using index as key for now
   modified?: boolean;
-  id?: string | number; // Assuming an ID might be useful, using index as key for now
+  approvalStatus: "pending" | "accepted" | "rejected"; // Status relative to AI generation
 }
 
 interface AIGenerateResultsProps {
@@ -18,9 +20,9 @@ interface AIGenerateResultsProps {
 
 const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcards: initialFlashcards }) => {
   const [flashcards, setFlashcards] = useState<EditableFlashcard[]>(
-    initialFlashcards.map((card, index) => ({ ...card, id: index })) // Add an ID for keying if needed
+    initialFlashcards.map((card, index) => ({ ...card, id: index, modified: false, approvalStatus: "pending" }))
   );
-  const [selectedFlashcards, setSelectedFlashcards] = useState<EditableFlashcard[]>([]);
+  // const [selectedFlashcards, setSelectedFlashcards] = useState<EditableFlashcard[]>([]); // Commented out: unused for now
   const [editingFlashcardIndex, setEditingFlashcardIndex] = useState<number | null>(null);
   const [currentEdit, setCurrentEdit] = useState<{ front: string; back: string } | null>(null);
 
@@ -29,9 +31,16 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
       const customEvent = event as CustomEvent<{ flashcards: GeneratedFlashcardDTO[] }>;
       if (customEvent.detail && customEvent.detail.flashcards) {
         console.log("[AIGenerateResults] Received new flashcards via event:", customEvent.detail.flashcards);
-        setFlashcards(customEvent.detail.flashcards.map((card, index) => ({ ...card, id: index, modified: false })));
-        setSelectedFlashcards([]);
-        setEditingFlashcardIndex(null); // Reset editing state when new cards arrive
+        setFlashcards(
+          customEvent.detail.flashcards.map((card, index) => ({
+            ...card,
+            id: index,
+            modified: false,
+            approvalStatus: "pending",
+          }))
+        );
+        // setSelectedFlashcards([]); // Commented out
+        setEditingFlashcardIndex(null);
         setCurrentEdit(null);
       }
     };
@@ -57,13 +66,11 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
 
   const handleConfirmEdit = () => {
     if (editingFlashcardIndex !== null && currentEdit) {
-      const updatedFlashcards = [...flashcards];
-      updatedFlashcards[editingFlashcardIndex] = {
-        ...updatedFlashcards[editingFlashcardIndex],
-        front: currentEdit.front,
-        back: currentEdit.back,
-        modified: true,
-      };
+      const updatedFlashcards = flashcards.map((card, index) =>
+        index === editingFlashcardIndex
+          ? { ...card, front: currentEdit.front, back: currentEdit.back, modified: true }
+          : card
+      );
       setFlashcards(updatedFlashcards);
       setEditingFlashcardIndex(null);
       setCurrentEdit(null);
@@ -75,6 +82,13 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
     if (currentEdit) {
       setCurrentEdit({ ...currentEdit, [field]: value });
     }
+  };
+
+  const handleApprovalChange = (indexToUpdate: number, status: "accepted" | "rejected") => {
+    setFlashcards((prevFlashcards) =>
+      prevFlashcards.map((card, index) => (index === indexToUpdate ? { ...card, approvalStatus: status } : card))
+    );
+    console.log(`[AIGenerateResults] Flashcard at index ${indexToUpdate} status changed to ${status}.`);
   };
 
   if (!flashcards || flashcards.length === 0) {
@@ -111,6 +125,34 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
     );
   }
 
+  const getStatusBadge = (card: EditableFlashcard) => {
+    let label = "";
+    let customClasses = "text-xs whitespace-nowrap"; // Base classes for all badges
+
+    if (card.approvalStatus === "accepted") {
+      label = card.modified ? "Zmodyfikowana i Zaakceptowana" : "AI - Zaakceptowana";
+      // Apply green styling for accepted states
+      customClasses += " bg-green-100 text-green-700 border border-green-300";
+    } else if (card.approvalStatus === "rejected") {
+      label = card.modified ? "Zmodyfikowana i Odrzucona" : "AI - Odrzucona";
+      // Apply red styling for rejected states (using destructive variant might be an option too)
+      customClasses += " bg-red-100 text-red-700 border border-red-300";
+    } else if (card.modified) {
+      // Pending, but modified
+      label = "Zmodyfikowana (oczekuje)";
+      // Apply blue/default styling for modified & pending states
+      customClasses += " bg-blue-100 text-blue-700 border border-blue-300";
+    } else {
+      return null; // No badge for default pending (unmodified) AI card
+    }
+    // Using Badge component with a base variant (like outline or default) and then applying custom classes for specific colors
+    return (
+      <Badge variant="outline" className={customClasses}>
+        {label}
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <Alert>
@@ -120,14 +162,23 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
 
       <div className="space-y-2 mb-4 flex flex-wrap gap-2">
         <Button
-          onClick={() => console.log("Zapisz zaakceptowane", selectedFlashcards)}
+          onClick={() =>
+            console.log(
+              "Zapisz zaakceptowane",
+              flashcards.filter((f) => f.approvalStatus === "accepted")
+            )
+          }
           variant="outline"
           size="sm"
-          disabled={selectedFlashcards.length === 0}
+          disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0}
         >
-          Zapisz Zaakceptowane ({selectedFlashcards.length})
+          Zapisz Zaakceptowane ({flashcards.filter((f) => f.approvalStatus === "accepted").length})
         </Button>
-        <Button onClick={() => console.log("Zapisz wszystkie", flashcards)} variant="default" size="sm">
+        <Button
+          onClick={() => console.log("Zapisz wszystkie (do zdefiniowania co to znaczy)", flashcards)}
+          variant="default"
+          size="sm"
+        >
           Zapisz Wszystkie ({flashcards.length})
         </Button>
       </div>
@@ -139,13 +190,9 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
             className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col"
           >
             <CardHeader className="flex-shrink-0">
-              <CardTitle className="flex justify-between items-center">
+              <CardTitle className="flex justify-between items-start gap-2">
                 <span>Flashcard #{index + 1}</span>
-                {card.modified && (
-                  <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                    ZMODYFIKOWANA
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-1">{getStatusBadge(card)}</div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 flex-grow">
@@ -163,6 +210,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                       value={currentEdit?.front || ""}
                       onChange={(e) => handleCurrentEditChange("front", e.target.value)}
                       className="min-h-[6em] text-sm"
+                      rows={4}
                     />
                   </div>
                   <div className="border-t pt-3">
@@ -177,6 +225,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                       value={currentEdit?.back || ""}
                       onChange={(e) => handleCurrentEditChange("back", e.target.value)}
                       className="min-h-[6em] text-sm"
+                      rows={4}
                     />
                   </div>
                 </>
@@ -203,20 +252,40 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                   <Button variant="outline" size="sm" onClick={handleCancelEdit}>
                     Anuluj
                   </Button>
-                  <Button variant="default" size="sm" onClick={handleConfirmEdit}>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleConfirmEdit}
+                    disabled={!currentEdit?.front.trim() || !currentEdit?.back.trim()}
+                  >
                     Zatwierdź
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="outline" size="sm" onClick={() => console.log("Odrzuć", card)}>
-                    Odrzuć
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleApprovalChange(index, "rejected")}
+                    disabled={card.approvalStatus === "rejected"}
+                  >
+                    {card.approvalStatus === "rejected" ? "Odrzucona" : "Odrzuć"}
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={() => handleEditClick(index)}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleEditClick(index)}
+                    disabled={card.approvalStatus === "accepted" || card.approvalStatus === "rejected"}
+                  >
                     Edytuj
                   </Button>
-                  <Button variant="default" size="sm" onClick={() => console.log("Zaakceptuj", card)}>
-                    Zaakceptuj
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleApprovalChange(index, "accepted")}
+                    disabled={card.approvalStatus === "accepted"}
+                  >
+                    {card.approvalStatus === "accepted" ? "Zaakceptowana" : "Zaakceptuj"}
                   </Button>
                 </>
               )}
