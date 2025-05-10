@@ -3,34 +3,79 @@ import type { GeneratedFlashcardDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+
+// Local interface extending GeneratedFlashcardDTO to include UI-specific state
+interface EditableFlashcard extends GeneratedFlashcardDTO {
+  modified?: boolean;
+  id?: string | number; // Assuming an ID might be useful, using index as key for now
+}
 
 interface AIGenerateResultsProps {
-  generatedFlashcards: GeneratedFlashcardDTO[]; // For initial flashcards, though events are primary update mechanism
+  generatedFlashcards: GeneratedFlashcardDTO[];
 }
 
 const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcards: initialFlashcards }) => {
-  const [flashcards, setFlashcards] = useState<GeneratedFlashcardDTO[]>(initialFlashcards);
-  const [selectedFlashcards, setSelectedFlashcards] = useState<GeneratedFlashcardDTO[]>([]);
+  const [flashcards, setFlashcards] = useState<EditableFlashcard[]>(
+    initialFlashcards.map((card, index) => ({ ...card, id: index })) // Add an ID for keying if needed
+  );
+  const [selectedFlashcards, setSelectedFlashcards] = useState<EditableFlashcard[]>([]);
+  const [editingFlashcardIndex, setEditingFlashcardIndex] = useState<number | null>(null);
+  const [currentEdit, setCurrentEdit] = useState<{ front: string; back: string } | null>(null);
 
   useEffect(() => {
     const handleNewFlashcards = (event: Event) => {
       const customEvent = event as CustomEvent<{ flashcards: GeneratedFlashcardDTO[] }>;
       if (customEvent.detail && customEvent.detail.flashcards) {
         console.log("[AIGenerateResults] Received new flashcards via event:", customEvent.detail.flashcards);
-        setFlashcards(customEvent.detail.flashcards);
-        setSelectedFlashcards([]); // Resetuj zaznaczenie po otrzymaniu nowych fiszek
+        setFlashcards(customEvent.detail.flashcards.map((card, index) => ({ ...card, id: index, modified: false })));
+        setSelectedFlashcards([]);
+        setEditingFlashcardIndex(null); // Reset editing state when new cards arrive
+        setCurrentEdit(null);
       }
     };
 
     console.log("[AIGenerateResults] Adding event listener for 'flashcardsGenerated'.");
     document.addEventListener("flashcardsGenerated", handleNewFlashcards);
 
-    // Cleanup listener on component unmount
     return () => {
       console.log("[AIGenerateResults] Removing event listener for 'flashcardsGenerated'.");
       document.removeEventListener("flashcardsGenerated", handleNewFlashcards);
     };
-  }, []); // Empty dependency array ensures this effect runs only once on mount and cleans up on unmount
+  }, []);
+
+  const handleEditClick = (index: number) => {
+    setEditingFlashcardIndex(index);
+    setCurrentEdit({ front: flashcards[index].front, back: flashcards[index].back });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFlashcardIndex(null);
+    setCurrentEdit(null);
+  };
+
+  const handleConfirmEdit = () => {
+    if (editingFlashcardIndex !== null && currentEdit) {
+      const updatedFlashcards = [...flashcards];
+      updatedFlashcards[editingFlashcardIndex] = {
+        ...updatedFlashcards[editingFlashcardIndex],
+        front: currentEdit.front,
+        back: currentEdit.back,
+        modified: true,
+      };
+      setFlashcards(updatedFlashcards);
+      setEditingFlashcardIndex(null);
+      setCurrentEdit(null);
+      console.log("[AIGenerateResults] Flashcard at index", editingFlashcardIndex, "confirmed edit.");
+    }
+  };
+
+  const handleCurrentEditChange = (field: "front" | "back", value: string) => {
+    if (currentEdit) {
+      setCurrentEdit({ ...currentEdit, [field]: value });
+    }
+  };
 
   if (!flashcards || flashcards.length === 0) {
     return (
@@ -66,15 +111,11 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
     );
   }
 
-  // TODO: Dodać logikę dla akcji: Zatwierdź, Edytuj, Odrzuć, Zapisz zaakceptowane, Zapisz wszystkie
-
   return (
     <div className="space-y-6">
       <Alert>
         <AlertTitle>Wygenerowane Fiszki ({flashcards.length})</AlertTitle>
-        <AlertDescription>
-          Przejrzyj poniższe fiszki. Możesz je zaakceptować, edytować (funkcja wkrótce) lub odrzucić.
-        </AlertDescription>
+        <AlertDescription>Przejrzyj poniższe fiszki. Możesz je zaakceptować, edytować lub odrzucić.</AlertDescription>
       </Alert>
 
       <div className="space-y-2 mb-4 flex flex-wrap gap-2">
@@ -93,35 +134,92 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {flashcards.map((card, index) => (
-          <Card key={index} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader>
-              <CardTitle>Flashcard #{index + 1}</CardTitle>
+          <Card
+            key={card.id || index}
+            className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col"
+          >
+            <CardHeader className="flex-shrink-0">
+              <CardTitle className="flex justify-between items-center">
+                <span>Flashcard #{index + 1}</span>
+                {card.modified && (
+                  <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    ZMODYFIKOWANA
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <CardDescription className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                  Front
-                </CardDescription>
-                <p className="text-card-foreground min-h-[4em]">{card.front}</p>
-              </div>
-              <div className="border-t pt-3">
-                <CardDescription className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                  Back
-                </CardDescription>
-                <p className="text-card-foreground min-h-[4em]">{card.back}</p>
-              </div>
+            <CardContent className="space-y-3 flex-grow">
+              {editingFlashcardIndex === index ? (
+                <>
+                  <div>
+                    <Label
+                      htmlFor={`edit-front-${index}`}
+                      className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1"
+                    >
+                      Front
+                    </Label>
+                    <Textarea
+                      id={`edit-front-${index}`}
+                      value={currentEdit?.front || ""}
+                      onChange={(e) => handleCurrentEditChange("front", e.target.value)}
+                      className="min-h-[6em] text-sm"
+                    />
+                  </div>
+                  <div className="border-t pt-3">
+                    <Label
+                      htmlFor={`edit-back-${index}`}
+                      className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1"
+                    >
+                      Back
+                    </Label>
+                    <Textarea
+                      id={`edit-back-${index}`}
+                      value={currentEdit?.back || ""}
+                      onChange={(e) => handleCurrentEditChange("back", e.target.value)}
+                      className="min-h-[6em] text-sm"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <CardDescription className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      Front
+                    </CardDescription>
+                    <p className="text-card-foreground min-h-[4em]">{card.front}</p>
+                  </div>
+                  <div className="border-t pt-3">
+                    <CardDescription className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      Back
+                    </CardDescription>
+                    <p className="text-card-foreground min-h-[4em]">{card.back}</p>
+                  </div>
+                </>
+              )}
             </CardContent>
-            <div className="p-3 border-t flex justify-end space-x-2 bg-muted/30">
-              {/* TODO: Dodać logikę zaznaczania fiszek */}
-              <Button variant="outline" size="sm" onClick={() => console.log("Odrzuć", card)}>
-                Odrzuć
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => console.log("Edytuj", card)}>
-                Edytuj
-              </Button>
-              <Button variant="default" size="sm" onClick={() => console.log("Zaakceptuj", card)}>
-                Zaakceptuj
-              </Button>
+            <div className="p-3 border-t flex-shrink-0 flex justify-end space-x-2 bg-muted/30">
+              {editingFlashcardIndex === index ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                    Anuluj
+                  </Button>
+                  <Button variant="default" size="sm" onClick={handleConfirmEdit}>
+                    Zatwierdź
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => console.log("Odrzuć", card)}>
+                    Odrzuć
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => handleEditClick(index)}>
+                    Edytuj
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => console.log("Zaakceptuj", card)}>
+                    Zaakceptuj
+                  </Button>
+                </>
+              )}
             </div>
           </Card>
         ))}
