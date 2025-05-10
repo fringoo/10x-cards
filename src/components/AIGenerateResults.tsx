@@ -6,6 +6,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 // Local interface extending GeneratedFlashcardDTO to include UI-specific state
 interface EditableFlashcard extends GeneratedFlashcardDTO {
@@ -26,6 +36,12 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
   const [editingFlashcardIndex, setEditingFlashcardIndex] = useState<number | null>(null);
   const [currentEdit, setCurrentEdit] = useState<{ front: string; back: string } | null>(null);
 
+  // State for Save Collection Modal
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [collectionName, setCollectionName] = useState("");
+  const [flashcardsToSave, setFlashcardsToSave] = useState<EditableFlashcard[] | null>(null);
+  const [saveMode, setSaveMode] = useState<"accepted" | "all" | null>(null);
+
   useEffect(() => {
     const handleNewFlashcards = (event: Event) => {
       const customEvent = event as CustomEvent<{ flashcards: GeneratedFlashcardDTO[] }>;
@@ -42,6 +58,11 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
         // setSelectedFlashcards([]); // Commented out
         setEditingFlashcardIndex(null);
         setCurrentEdit(null);
+        // Reset save modal related states if new cards arrive
+        setIsSaveModalOpen(false);
+        setCollectionName("");
+        setFlashcardsToSave(null);
+        setSaveMode(null);
       }
     };
 
@@ -89,6 +110,48 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
       prevFlashcards.map((card, index) => (index === indexToUpdate ? { ...card, approvalStatus: status } : card))
     );
     console.log(`[AIGenerateResults] Flashcard at index ${indexToUpdate} status changed to ${status}.`);
+  };
+
+  const openSaveDialog = (mode: "accepted" | "all") => {
+    setSaveMode(mode);
+    if (mode === "accepted") {
+      setFlashcardsToSave(flashcards.filter((f) => f.approvalStatus === "accepted"));
+    } else {
+      setFlashcardsToSave(flashcards);
+    }
+    setCollectionName(""); // Reset name field
+    setIsSaveModalOpen(true);
+  };
+
+  const handleSaveCollection = async () => {
+    if (!collectionName.trim()) {
+      alert("Nazwa kolekcji nie może być pusta."); // Simple validation for now
+      return;
+    }
+    if (!flashcardsToSave || flashcardsToSave.length === 0) {
+      alert("Brak fiszek do zapisania.");
+      setIsSaveModalOpen(false);
+      return;
+    }
+
+    console.log(`--- Mock Save Action ---`);
+    console.log(`Kolekcja: "${collectionName}"`);
+    console.log(`Tryb zapisu: ${saveMode}`);
+    console.log("Liczba fiszek do zapisania:", flashcardsToSave.length);
+    console.log(
+      "Fiszki:",
+      flashcardsToSave.map((f) => ({ front: f.front, back: f.back, modified: f.modified, status: f.approvalStatus }))
+    );
+    console.log(`--- Koniec Mock Save Action ---`);
+
+    // TODO: Actual API call to /api/collections/save
+    // Example: try { await fetch(...); show success } catch { show error }
+
+    alert(`Kolekcja "${collectionName}" została (mock) zapisana! Sprawdź konsolę.`);
+    setIsSaveModalOpen(false);
+    setCollectionName("");
+    setFlashcardsToSave(null);
+    setSaveMode(null);
   };
 
   if (!flashcards || flashcards.length === 0) {
@@ -160,28 +223,60 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
         <AlertDescription>Przejrzyj poniższe fiszki. Możesz je zaakceptować, edytować lub odrzucić.</AlertDescription>
       </Alert>
 
-      <div className="space-y-2 mb-4 flex flex-wrap gap-2">
-        <Button
-          onClick={() =>
-            console.log(
-              "Zapisz zaakceptowane",
-              flashcards.filter((f) => f.approvalStatus === "accepted")
-            )
-          }
-          variant="outline"
-          size="sm"
-          disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0}
-        >
-          Zapisz Zaakceptowane ({flashcards.filter((f) => f.approvalStatus === "accepted").length})
-        </Button>
-        <Button
-          onClick={() => console.log("Zapisz wszystkie (do zdefiniowania co to znaczy)", flashcards)}
-          variant="default"
-          size="sm"
-        >
-          Zapisz Wszystkie ({flashcards.length})
-        </Button>
-      </div>
+      <Dialog open={isSaveModalOpen} onOpenChange={setIsSaveModalOpen}>
+        <div className="space-y-2 mb-4 flex flex-wrap gap-2">
+          <Button
+            onClick={() => openSaveDialog("accepted")}
+            variant="outline"
+            size="sm"
+            disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0}
+          >
+            Zapisz Zaakceptowane ({flashcards.filter((f) => f.approvalStatus === "accepted").length})
+          </Button>
+          <Button onClick={() => openSaveDialog("all")} variant="default" size="sm" disabled={flashcards.length === 0}>
+            Zapisz Wszystkie ({flashcards.length})
+          </Button>
+        </div>
+
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Zapisz kolekcję fiszek</DialogTitle>
+            <DialogDescription>
+              Podaj nazwę dla swojej nowej kolekcji fiszek. Tryb:{" "}
+              {saveMode === "accepted" ? "Tylko zaakceptowane" : "Wszystkie wygenerowane"}. Liczba fiszek do zapisania:{" "}
+              {flashcardsToSave?.length || 0}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="collection-name" className="text-right">
+                Nazwa
+              </Label>
+              <Input
+                id="collection-name"
+                value={collectionName}
+                onChange={(e) => setCollectionName(e.target.value)}
+                className="col-span-3"
+                placeholder="Np. TypeScript - zaawansowane koncepty"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Anuluj
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              onClick={handleSaveCollection}
+              disabled={!collectionName.trim() || (flashcardsToSave?.length || 0) === 0}
+            >
+              Zapisz kolekcję
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {flashcards.map((card, index) => (
@@ -275,7 +370,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     variant="secondary"
                     size="sm"
                     onClick={() => handleEditClick(index)}
-                    disabled={card.approvalStatus === "accepted" || card.approvalStatus === "rejected"}
+                    disabled={card.approvalStatus === "accepted"}
                   >
                     Edytuj
                   </Button>
