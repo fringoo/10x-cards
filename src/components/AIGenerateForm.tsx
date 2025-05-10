@@ -3,23 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { generateFlashcardsSchema } from "@/types"; // Walidacja Zod
-import type { GenerateFlashcardsCommand, GeneratedFlashcardDTO } from "@/types";
+import type { GeneratedFlashcardDTO } from "@/types";
 
-interface AIGenerateFormProps {
-  // Funkcja do przekazywania wygenerowanych fiszek do komponentu nadrzędnego lub innego komponentu
-  onFlashcardsGenerated: (flashcards: GeneratedFlashcardDTO[]) => void;
-  // Dodatkowe propsy w razie potrzeby
-}
+// interface AIGenerateFormProps {
+// TODO: Decide how to handle generated flashcards (e.g., pass a callback or use a state management solution)
+// onFlashcardsGenerated: (flashcards: GeneratedFlashcardDTO[]) => void;
+// }
 
-const AIGenerateForm: React.FC<AIGenerateFormProps> = ({ onFlashcardsGenerated }) => {
+const AIGenerateForm = (/*{ onFlashcardsGenerated }*/) => {
   const [text, setText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState<number>(0);
 
-  const MAX_CHARS = generateFlashcardsSchema.shape.text._def.checks.find(c => c.kind === "max")?.value || 5000;
-  const MIN_CHARS = generateFlashcardsSchema.shape.text._def.checks.find(c => c.kind === "min")?.value || 10;
-
+  const MAX_CHARS = generateFlashcardsSchema.shape.text._def.checks.find((c) => c.kind === "max")?.value || 5000;
+  const MIN_CHARS = generateFlashcardsSchema.shape.text._def.checks.find((c) => c.kind === "min")?.value || 10;
 
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = event.target.value;
@@ -36,44 +34,51 @@ const AIGenerateForm: React.FC<AIGenerateFormProps> = ({ onFlashcardsGenerated }
 
     const validationResult = generateFlashcardsSchema.safeParse({ text });
     if (!validationResult.success) {
-      setError(validationResult.error.errors.map(e => e.message).join(", "));
+      setError(validationResult.error.errors.map((e) => e.message).join(", "));
       return;
     }
 
     setIsLoading(true);
     try {
-      // Symulacja wywołania API
-      console.log("Wysyłanie tekstu do API:", text);
-      // const response = await fetch("/api/flashcards/generate", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ text } as GenerateFlashcardsCommand),
-      // });
+      // Wysyłanie tekstu do API
+      console.log("Wysyłanie tekstu do API:", validationResult.data.text);
+      const response = await fetch("/api/flashcards/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: validationResult.data.text, maxCards: validationResult.data.maxCards }), // Przekazujemy również maxCards
+      });
 
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.error?.message || "Nie udało się wygenerować fiszek.");
-      // }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Nie udało się wygenerować fiszek.");
+      }
 
-      // const generatedFlashcards: GeneratedFlashcardDTO[] = await response.json();
-      
+      const generatedFlashcards: GeneratedFlashcardDTO[] = await response.json();
+
       // Placeholder - symulacja odpowiedzi API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const mockFlashcards: GeneratedFlashcardDTO[] = [
-        { front: "Przykładowy Front 1 z tekstu: " + text.substring(0,10), back: "Przykładowy Tył 1" },
-        { front: "Przykładowy Front 2", back: "Przykładowy Tył 2" },
-      ];
-      
-      console.log("Otrzymano fiszki:", mockFlashcards);
-      // onFlashcardsGenerated(mockFlashcards); // Odkomentuj, gdy będzie gotowy handler
-      
-      // Emitowanie zdarzenia do strony Astro - bardziej skomplikowane i wymaga obsługi po stronie Astro
-      const customEvent = new CustomEvent('flashcardsGenerated', { detail: { flashcards: mockFlashcards } });
-      document.dispatchEvent(customEvent);
+      // await new Promise((resolve) => setTimeout(resolve, 1500));
+      // const mockFlashcards: GeneratedFlashcardDTO[] = [
+      //   { front: "Przykładowy Front 1 z tekstu: " + text.substring(0, 10), back: "Przykładowy Tył 1" },
+      //   { front: "Przykładowy Front 2", back: "Przykładowy Tył 2" },
+      // ];
 
+      console.log("[AIGenerateForm] Otrzymano fiszki z API:", generatedFlashcards);
 
-    } catch (err: any) {
-      setError(err.message || "Wystąpił nieoczekiwany błąd.");
+      // Dispatch a custom event with the generated flashcards
+      const flashcardsGeneratedEvent = new CustomEvent("flashcardsGenerated", {
+        detail: { flashcards: generatedFlashcards },
+      });
+      document.dispatchEvent(flashcardsGeneratedEvent);
+      console.log("[AIGenerateForm] Dispatched 'flashcardsGenerated' event with data:", generatedFlashcards);
+
+      // TODO: Decide how to display/handle these flashcards in the UI
+      // For now, they are logged to the console and an event is dispatched.
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || "Wystąpił nieoczekiwany błąd.");
+      } else {
+        setError("Wystąpił nieoczekiwany błąd.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -109,9 +114,18 @@ const AIGenerateForm: React.FC<AIGenerateFormProps> = ({ onFlashcardsGenerated }
       <Button type="submit" disabled={isLoading || charCount < MIN_CHARS || charCount > MAX_CHARS} className="w-full">
         {isLoading ? (
           <>
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg
+              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Generowanie...
           </>
@@ -123,4 +137,4 @@ const AIGenerateForm: React.FC<AIGenerateFormProps> = ({ onFlashcardsGenerated }
   );
 };
 
-export default AIGenerateForm; 
+export default AIGenerateForm;

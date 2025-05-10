@@ -89,7 +89,7 @@ export class OpenRouterService {
   }) {
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || "https://openrouter.ai/api/v1";
-    this.defaultModel = config.defaultModel || "meta-llama/llama-4-scout";
+    this.defaultModel = config.defaultModel || "google/gemini-2.0-flash-exp:free";
     this.defaultParameters = config.defaultParameters || {
       temperature: 0.7,
       max_tokens: 1000,
