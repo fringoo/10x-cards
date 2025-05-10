@@ -34,9 +34,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      collections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       flashcards: {
         Row: {
+          ai_approval_status: string
+          ai_modified_by_user: boolean
           back: string
+          collection_id: string | null
           created_at: string
           front: string
           id: string
@@ -45,7 +72,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_approval_status?: string
+          ai_modified_by_user?: boolean
           back: string
+          collection_id?: string | null
           created_at?: string
           front: string
           id?: string
@@ -54,7 +84,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_approval_status?: string
+          ai_modified_by_user?: boolean
           back?: string
+          collection_id?: string | null
           created_at?: string
           front?: string
           id?: string
@@ -62,7 +95,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

@@ -3,25 +3,40 @@ import {
   type SaveFlashcardCollectionCommand,
   saveFlashcardCollectionSchema,
   type SaveFlashcardCollectionResponseDTO,
-} from "@/types"; // Assuming @ is aliased to src/
-// import { supabase } from "@/lib/supabase/server"; // Placeholder for actual Supabase client
+} from "@/types";
+import { saveFlashcardCollection } from "@/lib/services/collection.service"; // Corrected import path
+// import { supabase } from "@/lib/supabase/server"; // This line can be removed if using locals.supabase
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   console.log("[API /api/collections/save] Received POST request at", new Date().toISOString());
 
-  // TODO: Implement actual user authentication
-  // const { data: { user }, error: authError } = await locals.supabase.auth.getUser();
-  // if (authError || !user) {
-  //   console.warn("[API /api/collections/save] Unauthorized attempt to save collection.");
-  //   return new Response(JSON.stringify({ error: { code: "UNAUTHORIZED", message: "Authentication required." } }), {
-  //     status: 401,
-  //     headers: { "Content-Type": "application/json" },
-  //   });
-  // }
-  // const userId = user.id;
-  const mockUserId = "mock-user-id-123"; // Using a mock user ID for now
+  // User authentication
+  if (!locals.supabase) {
+    console.error("[API /api/collections/save] Supabase client not available on locals.");
+    return new Response(
+      JSON.stringify({ error: { code: "SERVER_ERROR", message: "Supabase client not configured." } }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await locals.supabase.auth.getUser();
+  if (authError || !user) {
+    console.warn("[API /api/collections/save] Unauthorized attempt to save collection. Auth error:", authError);
+    return new Response(JSON.stringify({ error: { code: "UNAUTHORIZED", message: "Authentication required." } }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  const userId = user.id;
+  // const mockUserId = "mock-user-id-123"; // Removed mock user ID
 
   let command: SaveFlashcardCollectionCommand;
   try {
@@ -42,7 +57,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
     command = parseResult.data;
-    console.log("[API /api/collections/save] Request body validated successfully for user:", mockUserId);
+    console.log("[API /api/collections/save] Request body validated successfully for user:", userId);
   } catch (e) {
     const err = e as Error;
     console.error("[API /api/collections/save] Error parsing JSON payload:", err.message);
@@ -55,34 +70,80 @@ export const POST: APIRoute = async ({ request, locals }) => {
     );
   }
 
-  // --- Mock Database Interaction ---
-  console.log(`[API /api/collections/save] Mocking database save for collection: "${command.collectionName}"`);
-  console.log(`[API /api/collections/save] User ID: ${mockUserId}`);
-  console.log(`[API /api/collections/save] Flashcards to save (${command.flashcards.length}):`);
-  command.flashcards.forEach((fc, idx) => {
-    console.log(
-      `  Flashcard ${idx + 1}: Front - "${fc.front.substring(0, 20)}...", Modified - ${fc.aiGeneratedDetails.modified}, Status - ${fc.aiGeneratedDetails.approvalStatus}`
+  // --- Real Database Interaction using CollectionService ---
+  console.log(
+    `[API /api/collections/save] Attempting to save collection via service for user: ${userId}, collection: "${command.collectionName}"`
+  );
+
+  try {
+    const result = await saveFlashcardCollection(
+      locals.supabase, // Use the Supabase client from locals
+      userId,
+      command.collectionName,
+      command.flashcards
     );
-  });
-  // In a real scenario:
-  // 1. Start a transaction.
-  // 2. Insert into 'collections' table (name, user_id) -> get collection_id.
-  // 3. Loop through command.flashcards:
-  //    Insert into 'flashcards' table (collection_id, user_id, front, back, source, modified_by_user, approval_status_ai).
-  // 4. Commit transaction or rollback on error.
 
-  const mockCollectionId = `coll_${Date.now()}`;
-  // --- End Mock Database Interaction ---
+    if (result.error) {
+      console.error("[API /api/collections/save] Error from collection service:", result.error);
+      // Determine status code based on error type if possible, otherwise default to 500
+      // For PostgrestError, we might be able to map to more specific HTTP errors
+      // For now, a generic 500 or a more specific one if the error message indicates something like a duplicate.
+      // If the error message indicates partial success (collection created, flashcards failed),
+      // we might want a different response, but the service currently returns a string error in that case.
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: "SERVICE_ERROR",
+            message: "Failed to save collection.",
+            details: typeof result.error === "string" ? result.error : result.error.message,
+          },
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
-  const responseDTO: SaveFlashcardCollectionResponseDTO = {
-    collectionId: mockCollectionId,
-    message: `Kolekcja "${command.collectionName}" została (mock) zapisana pomyślnie. ID: ${mockCollectionId}`,
-    flashcardsSavedCount: command.flashcards.length,
-  };
+    if (!result.collectionId) {
+      // This case should ideally be covered by result.error, but as a safeguard
+      console.error("[API /api/collections/save] Collection service returned no error but no collection ID.");
+      return new Response(
+        JSON.stringify({ error: { code: "SERVICE_ERROR", message: "Failed to create collection ID." } }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
-  console.log("[API /api/collections/save] Sending 201 Created response.");
-  return new Response(JSON.stringify(responseDTO), {
-    status: 201, // 201 Created is appropriate for successful resource creation
-    headers: { "Content-Type": "application/json" },
-  });
+    const responseDTO: SaveFlashcardCollectionResponseDTO = {
+      collectionId: result.collectionId,
+      message: `Kolekcja "${command.collectionName}" została zapisana pomyślnie. ID: ${result.collectionId}`,
+      flashcardsSavedCount: result.flashcardsSavedCount,
+    };
+
+    console.log("[API /api/collections/save] Sending 201 Created response.");
+    return new Response(JSON.stringify(responseDTO), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (serviceError) {
+    const err = serviceError as Error;
+    console.error("[API /api/collections/save] Unexpected error calling collection service:", err.message, err.stack);
+    return new Response(
+      JSON.stringify({ error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." } }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  // --- End Real Database Interaction ---
+
+  // const mockCollectionId = `coll_${Date.now()}`; // Mock code removed
+  // // --- End Mock Database Interaction ---
+
+  // const responseDTO: SaveFlashcardCollectionResponseDTO = { // Mock code removed
+  //   collectionId: mockCollectionId,
+  //   message: `Kolekcja "${command.collectionName}" została (mock) zapisana pomyślnie. ID: ${mockCollectionId}`,
+  //   flashcardsSavedCount: command.flashcards.length,
+  // };
+
+  // console.log("[API /api/collections/save] Sending 201 Created response."); // Mock code removed
+  // return new Response(JSON.stringify(responseDTO), { // Mock code removed
+  //   status: 201, // 201 Created is appropriate for successful resource creation
+  //   headers: { "Content-Type": "application/json" },
+  // });
 };
