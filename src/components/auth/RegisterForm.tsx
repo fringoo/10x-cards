@@ -37,7 +37,7 @@ const RegisterForm: React.FC = () => {
         <Button type="submit" className="w-full">Zarejestruj się</Button>
         <div className="mt-4 text-center text-sm">
           Masz już konto?{' '}
-          <a href="/login" /* TODO: Use Astro's client-side router or a proper Link component if available */ className="underline">
+          <a href="/auth/login" /* TODO: Use Astro's client-side router or a proper Link component if available */ className="underline">
             Zaloguj się
           </a>
         </div>

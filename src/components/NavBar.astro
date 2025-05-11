@@ -1,14 +1,9 @@
 ---
-// Odczytujemy parametr 'simulatedAuth' z URL
-const simulatedAuthParam = Astro.url.searchParams.get('simulatedAuth');
-
-// Ustawiamy isAuthenticated na podstawie parametru URL
-// Jeśli parametr nie istnieje lub ma inną wartość niż 'true', użytkownik jest wylogowany
-let isAuthenticated = simulatedAuthParam === 'true';
-
-// Pozostałe zamockowane dane, user jest potrzebny, gdy isAuthenticated jest true
-const user = isAuthenticated ? { name: "MockUser" } : null;
-const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmin przez URL jeśli potrzeba
+// Usuwamy całą logikę związaną z simulatedAuthParam
+// Stan autentykacji będzie teraz pochodził z Astro.locals.user
+const { user } = Astro.locals; // user będzie obiektem User z Supabase lub null
+const isAuthenticated = !!user;
+const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzenie roli admina, dostosuj wg potrzeb
 ---
 
 <nav class="bg-gray-800 text-white p-4">
@@ -22,8 +17,8 @@ const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmi
       {
         !isAuthenticated && (
           <>
-            <a href={`${Astro.url.pathname}?simulatedAuth=true`} class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
-            <a href="/register" class="px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+            <a href="/auth/login" class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href="/auth/register" class="px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
           </>
         )
       }
@@ -42,8 +37,11 @@ const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmi
                 Panel admina
               </a>
             )}
-            <span class="px-3 py-2">Witaj, {user.name}</span>
-            <a href={`${Astro.url.pathname}?simulatedAuth=false`} class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            {/* Użycie user.email lub innej właściwości z obiektu User Supabase */}
+            <span class="px-3 py-2">Witaj, {user.email || user.id}</span> 
+            {/* Przycisk wylogowania będzie wymagał interakcji z API, na razie zostawiamy jako link */}
+            {/* Docelowo, to powinien być formularz POST lub wywołanie JS do /api/auth/logout */}
+            <a href="#" id="logout-button-desktop" class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
           </>
         )
       }
@@ -59,14 +57,14 @@ const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmi
     </div>
   </div>
 
-  {/* Mobile Menu - hidden by default, shown on mobile when active (JS later) */}
+  {/* Mobile Menu - hidden by default, shown on mobile when active */}
   <div id="mobile-menu" class="hidden md:hidden">
     <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
       {
         !isAuthenticated && (
           <>
-            <a href={`${Astro.url.pathname}?simulatedAuth=true`} class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
-            <a href="/register" class="block px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+            <a href="/auth/login" class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
+            <a href="/auth/register" class="block px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
           </>
         )
       }
@@ -85,8 +83,8 @@ const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmi
                 Panel admina
               </a>
             )}
-            <span class="block px-3 py-2">Witaj, {user.name}</span>
-            <a href={`${Astro.url.pathname}?simulatedAuth=false`} class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            <span class="block px-3 py-2">Witaj, {user.email || user.id}</span>
+            <a href="#" id="logout-button-mobile" class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
           </>
         )
       }
@@ -95,12 +93,35 @@ const isAdmin = isAuthenticated ? false : false; // Można też sterować isAdmi
 </nav>
 
 <script>
-  // Placeholder for client-side script to toggle mobile menu visibility.
+  // Skrypt do obsługi menu mobilnego
   const mobileMenuButton = document.getElementById('mobile-menu-button');
   const mobileMenu = document.getElementById('mobile-menu');
   mobileMenuButton?.addEventListener('click', () => {
     mobileMenu?.classList.toggle('hidden');
   });
+
+  // Prosta obsługa wylogowania po stronie klienta (docelowo powinno być bardziej rozbudowane)
+  // Należy utworzyć endpoint /api/auth/logout typu POST
+  async function handleLogout(event: Event) {
+    event.preventDefault();
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+      if (response.ok) {
+        window.location.href = '/'; // Przekieruj na stronę główną po wylogowaniu
+      } else {
+        console.error('Błąd podczas wylogowywania');
+        // Można dodać powiadomienie dla użytkownika
+      }
+    } catch (error) {
+      console.error('Błąd sieci podczas wylogowywania', error);
+    }
+  }
+
+  document.getElementById('logout-button-desktop')?.addEventListener('click', handleLogout);
+  document.getElementById('logout-button-mobile')?.addEventListener('click', handleLogout);
+
 </script>
 
 <!-- TODO: Implement mobile hamburger menu --> 
