@@ -1,0 +1,55 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Button } from '@/components/ui/button';
+
+// Pobranie danych użytkownika. Zakładamy, że middleware Supabase jest aktywny.
+const { user } = Astro.locals;
+const isAuthenticated = !!user;
+
+// Jeśli użytkownik nie jest zalogowany, można go przekierować lub wyświetlić stosowny komunikat.
+// Dla uproszczenia, jeśli nie ma middleware, który by to robił, można dodać przekierowanie tutaj.
+if (!isAuthenticated) {
+  return Astro.redirect('/auth/login'); // Przekieruj na stronę logowania
+}
+
+const userEmail = user?.email || "Nie udało się załadować adresu email.";
+
+// TODO: Zweryfikować docelowy URL dla zmiany/resetu hasła dla zalogowanego użytkownika.
+// Może to być standardowa funkcjonalność Supabase UI lub dedykowana strona.
+// Na razie linkujemy do ogólnej strony resetowania hasła.
+const changePasswordUrl = "/auth/reset-password"; 
+---
+
+<Layout title="Mój Profil">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto bg-card p-8 rounded-lg shadow-md">
+      <h1 class="text-3xl font-bold mb-6 text-center">Mój Profil</h1>
+      <div class="space-y-4">
+        <div>
+          <p class="text-sm font-medium text-muted-foreground">Adres e-mail:</p>
+          <p class="text-lg">{userEmail}</p>
+        </div>
+        <div>
+          <a href="/auth/change-password" class="w-full">
+            <Button variant="outline" class="w-full">Zmień Hasło</Button>
+          </a>
+        </div>
+        <div class="mt-6 text-center">
+          <form method="POST" action="/auth/logout">
+            <Button type="submit" variant="ghost">Wyloguj się</Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Dodatkowe style, jeśli potrzebne */
+  .bg-card {
+    background-color: hsl(var(--card)); /* Użycie zmiennej CSS dla tła karty z Shadcn/ui */
+  }
+  .text-card-foreground {
+    color: hsl(var(--card-foreground)); /* Użycie zmiennej CSS dla tekstu karty z Shadcn/ui */
+  }
+</style> 
