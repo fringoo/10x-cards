@@ -6,7 +6,7 @@ import type { Database } from "@/db/database.types.ts"; // For correct table nam
 // This maps from FlashcardInCollectionDTO to the DB schema for flashcards table
 type FlashcardInsertPayload = Database["public"]["Tables"]["flashcards"]["Insert"];
 export type FlashcardUpdatePayload = Database["public"]["Tables"]["flashcards"]["Update"];
-type CollectionBasicInfo = Pick<Database["public"]["Tables"]["collections"]["Row"], "id" | "name">;
+export type CollectionBasicInfo = Pick<Database["public"]["Tables"]["collections"]["Row"], "id" | "name">;
 export type FlashcardDetailsDTO = Pick<
   Database["public"]["Tables"]["flashcards"]["Row"],
   "id" | "front" | "back" | "source" | "ai_modified_by_user" | "ai_approval_status" | "collection_id" | "user_id" | "created_at" | "updated_at"
