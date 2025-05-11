@@ -35,6 +35,7 @@ const CollectionManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [editingFlashcard, setEditingFlashcard] = useState<EditingFlashcardState | null>(null);
+  const [updatingFlashcardId, setUpdatingFlashcardId] = useState<string | null>(null); // Do śledzenia ładowania konkretnej fiszki
 
   // Pobieranie kolekcji użytkownika
   const fetchCollections = useCallback(async () => {
@@ -104,30 +105,31 @@ const CollectionManager: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!editingFlashcard) return;
     setError(null);
-    // TODO: Dodać stan ładowania dla zapisu konkretnej fiszki?
-
+    setUpdatingFlashcardId(editingFlashcard.id);
     try {
       const response = await fetch(`/api/flashcards/${editingFlashcard.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ front: editingFlashcard.front, back: editingFlashcard.back, ai_modified_by_user: true }), // Zakładamy, że edycja przez użytkownika oznacza modyfikację
+        body: JSON.stringify({ 
+          front: editingFlashcard.front, 
+          back: editingFlashcard.back, 
+          ai_modified_by_user: true // Edycja treści zawsze oznacza modyfikację przez użytkownika
+        }),
       });
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       const updatedFlashcard: FlashcardDetailsDTO = await response.json();
-      
-      // Zaktualizuj listę fiszek
       setFlashcards(prevFlashcards => 
         prevFlashcards.map(fc => fc.id === updatedFlashcard.id ? updatedFlashcard : fc)
       );
-      setEditingFlashcard(null); // Zakończ edycję
+      setEditingFlashcard(null);
     } catch (e: any) {
       console.error(`Błąd podczas zapisywania fiszki ${editingFlashcard.id}:`, e);
       setError(e.message || 'Nie udało się zapisać zmian w fiszce.');
-      // Nie zamykaj edycji w przypadku błędu, aby użytkownik mógł spróbować ponownie lub anulować
+    } finally {
+      setUpdatingFlashcardId(null);
     }
   };
 
@@ -144,29 +146,49 @@ const CollectionManager: React.FC = () => {
       return;
     }
     setError(null);
-
+    setUpdatingFlashcardId(flashcardId);
     try {
       const response = await fetch(`/api/flashcards/${flashcardId}`, {
         method: 'DELETE',
       });
-
-      if (!response.ok) {
-        // Status 204 (No Content) jest sukcesem, ale response.ok może być false dla niego w niektórych implementacjach fetch
-        if (response.status === 204) {
-          // Usunięcie pomyślne
-        } else {
-          const errorData = await response.json().catch(() => ({ message: response.statusText }));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
+      if (!response.ok && response.status !== 204) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      // Usuń fiszkę z listy
       setFlashcards(prevFlashcards => prevFlashcards.filter(fc => fc.id !== flashcardId));
     } catch (e: any) {
       console.error(`Błąd podczas usuwania fiszki ${flashcardId}:`, e);
       setError(e.message || 'Nie udało się usunąć fiszki.');
+    } finally {
+      setUpdatingFlashcardId(null);
     }
   };
   
+  const handleApprovalStatusChange = async (flashcardId: string, newStatus: 'approved' | 'rejected') => {
+    setError(null);
+    setUpdatingFlashcardId(flashcardId);
+    try {
+      const response = await fetch(`/api/flashcards/${flashcardId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ai_approval_status: newStatus }), 
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      const updatedFlashcard: FlashcardDetailsDTO = await response.json();
+      setFlashcards(prevFlashcards => 
+        prevFlashcards.map(fc => fc.id === updatedFlashcard.id ? updatedFlashcard : fc)
+      );
+    } catch (e: any) {
+      console.error(`Błąd podczas aktualizacji statusu fiszki ${flashcardId}:`, e);
+      setError(e.message || 'Nie udało się zaktualizować statusu fiszki.');
+    } finally {
+      setUpdatingFlashcardId(null);
+    }
+  };
+
   // --- Renderowanie --- 
 
   if (isLoadingCollections) {
@@ -188,13 +210,15 @@ const CollectionManager: React.FC = () => {
         <Select 
           value={selectedCollectionId || ''} 
           onValueChange={(value: string) => setSelectedCollectionId(value === '' ? null : value)}
-          disabled={collections.length === 0}
+          disabled={collections.length === 0 || isLoadingCollections}
         >
           <SelectTrigger id="collection-select" className="w-full md:w-[300px] mt-1">
             <SelectValue placeholder="Wybierz kolekcję..." />
           </SelectTrigger>
           <SelectContent>
-            {collections.length === 0 && !isLoadingCollections ? (
+            {isLoadingCollections ? (
+                <SelectItem value="" disabled>Ładowanie...</SelectItem>
+            ) : collections.length === 0 ? (
                 <SelectItem value="" disabled>Brak dostępnych kolekcji</SelectItem>
             ) : (
                 collections.map(col => (
@@ -206,7 +230,7 @@ const CollectionManager: React.FC = () => {
       </div>
 
       {/* Komunikat o błędzie podczas ładowania fiszek lub operacji na fiszkach */}
-      {error && <Alert variant="destructive">
+      {error && <Alert variant="destructive" className="my-2">
           <AlertTitle>Błąd</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
       </Alert>}
@@ -232,9 +256,12 @@ const CollectionManager: React.FC = () => {
                     {fc.front.substring(0, 100) + (fc.front.length > 100 ? '...' : '')}
                   </CardTitle>
                 )}
-                <div className="flex space-x-2 pt-1">
+                <div className="flex space-x-2 pt-1 flex-wrap gap-y-1">
                     {fc.source === 'ai' && (
-                        <Badge variant={fc.ai_approval_status === 'approved' ? 'default' : fc.ai_approval_status === 'rejected' ? 'destructive' : 'secondary'}>
+                        <Badge 
+                            variant={fc.ai_approval_status === 'rejected' ? 'destructive' : fc.ai_approval_status === 'pending' || !fc.ai_approval_status ? 'secondary' : 'default'}
+                            className={fc.ai_approval_status === 'approved' ? 'bg-green-100 text-green-700 border border-green-300' : ''}
+                        >
                             AI: {fc.ai_approval_status || 'pending'}
                         </Badge>
                     )}
@@ -268,21 +295,48 @@ const CollectionManager: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground truncate" title={fc.back}> {/* Pokaż tylko część tyłu */}
+                  <p className="text-sm text-muted-foreground min-h-[60px]">
                     {fc.back.substring(0, 150) + (fc.back.length > 150 ? '...' : '')}
                   </p>
                 )}
               </CardContent>
-              <div className="p-4 pt-0 border-t mt-auto">
+              <div className="p-4 pt-2 border-t mt-auto">
                 {editingFlashcard?.id === fc.id ? (
                   <div className="flex justify-end space-x-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>Anuluj</Button>
-                    <Button size="sm" onClick={handleSaveEdit}>Zapisz</Button>
+                    <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={updatingFlashcardId === fc.id}>Anuluj</Button>
+                    <Button size="sm" onClick={handleSaveEdit} disabled={updatingFlashcardId === fc.id}>
+                      {updatingFlashcardId === fc.id && editingFlashcard ? 'Zapisywanie...' : 'Zapisz'}
+                    </Button>
                   </div>
                 ) : (
-                  <div className="flex justify-end space-x-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditClick(fc)}>Edytuj</Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(fc.id)}>Usuń</Button>
+                  <div className="space-y-2">
+                    <div className="flex justify-end space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditClick(fc)} disabled={!!updatingFlashcardId}>Edytuj</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(fc.id)} disabled={!!updatingFlashcardId}>
+                            {updatingFlashcardId === fc.id && !editingFlashcard ? 'Usuwanie...' : 'Usuń'}
+                        </Button>
+                    </div>
+                    {fc.source === 'ai' && (
+                        <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
+                            <Button 
+                                variant={fc.ai_approval_status === 'approved' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleApprovalStatusChange(fc.id, 'approved')} 
+                                disabled={!!updatingFlashcardId || fc.ai_approval_status === 'approved'}
+                                className={fc.ai_approval_status === 'approved' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                            >
+                                {updatingFlashcardId === fc.id ? '...' : 'Zaakceptuj'}
+                            </Button>
+                            <Button 
+                                variant={fc.ai_approval_status === 'rejected' ? "destructive" : "outline"} 
+                                size="sm" 
+                                onClick={() => handleApprovalStatusChange(fc.id, 'rejected')} 
+                                disabled={!!updatingFlashcardId || fc.ai_approval_status === 'rejected'}
+                            >
+                                {updatingFlashcardId === fc.id ? '...' : 'Odrzuć'}
+                            </Button>
+                        </div>
+                    )}
                   </div>
                 )}
               </div>
