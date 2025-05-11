@@ -16,25 +16,26 @@ const otherPublicRoutes = ['/', '/auth/verify-email'];
 export const onRequest = defineMiddleware(
   async (context, next) => {
     const { locals, cookies, url, request, redirect } = context;
-    const supabase = createSupabaseServerClient({ cookies, headers: request.headers });
+    const currentPath = url.pathname;
+    console.log(`[Middleware] Przetwarzanie żądania dla: ${currentPath}`);
 
-    locals.supabase = supabase; // Udostępnienie klienta Supabase w Astro.locals
+    const supabase = createSupabaseServerClient({ cookies, headers: request.headers });
+    locals.supabase = supabase;
 
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
-    locals.user = user as User | null; // Użycie pełnego typu User z Supabase
+    locals.user = user as User | null;
 
-    const currentPath = url.pathname;
-
-    // Logika przekierowań:
     if (user) {
-      // Jeśli użytkownik jest zalogowany i próbuje uzyskać dostęp do ścieżek procesu autentykacji
+      console.log(`[Middleware] Użytkownik zalogowany: ${user.email} (ID: ${user.id})`);
       if (authFlowRoutes.some(path => currentPath.startsWith(path))) {
-        return redirect('/'); // Przekieruj na stronę główną
+        console.log(`[Middleware] Zalogowany użytkownik na ścieżce autoryzacji (${currentPath}). Przekierowanie do /`);
+        return redirect('/');
       }
     } else {
-      // Jeśli użytkownik jest niezalogowany i próbuje uzyskać dostęp do chronionej ścieżki
+      console.log('[Middleware] Użytkownik niezalogowany.');
       if (protectedRoutes.some(path => currentPath.startsWith(path))) {
+        console.log(`[Middleware] Niezalogowany użytkownik na chronionej ścieżce (${currentPath}). Przekierowanie do /auth/login`);
         return redirect('/auth/login');
       }
     }
@@ -43,7 +44,7 @@ export const onRequest = defineMiddleware(
     // powinny być dostępne niezależnie od stanu logowania, 
     // ich logika wewnętrzna obsłuży ewentualne tokeny/kontekst.
     // API routes również są pomijane w tej logice przekierowań.
-
+    console.log(`[Middleware] Kontynuacja żądania dla: ${currentPath}`);
     return next();
   },
 );

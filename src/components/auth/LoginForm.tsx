@@ -19,6 +19,7 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
+  console.log('[LoginForm] Komponent zamontowany.');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,6 +32,7 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit = async (data: LoginFormInputs) => {
+    console.log('[LoginForm] Próba wysłania formularza logowania z danymi:', data.email);
     setIsSubmitting(true);
     setLoginError(null);
 
@@ -39,21 +41,24 @@ const LoginForm: React.FC = () => {
     formData.append('password', data.password);
 
     try {
+      console.log('[LoginForm] Wysyłanie żądania POST do /api/auth/login');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         body: formData,
       });
-
+      console.log(`[LoginForm] Otrzymano odpowiedź z API: Status ${response.status}`);
       const result = await response.json();
+      console.log('[LoginForm] Odpowiedź API (JSON):', result);
 
       if (!response.ok) {
+        console.error('[LoginForm] Błąd odpowiedzi API:', result.error);
         setLoginError(result.error || 'Wystąpił błąd podczas logowania.');
       } else {
-        // Sukces, Supabase ustawiło ciasteczka przez API
-        // Przekierowanie na stronę główną
+        console.log('[LoginForm] Logowanie pomyślne. Przekierowanie do /');
         window.location.href = '/'; 
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('[LoginForm] Błąd sieci lub inny błąd podczas wysyłania formularza:', error.message);
       setLoginError('Nie udało się połączyć z serwerem. Spróbuj ponownie później.');
     }
     setIsSubmitting(false);
