@@ -167,8 +167,8 @@ US-014: Przeglądanie statystyk systemu
   1. Dashboard z kluczowymi metrykami jest dostępny dla administratora
   2. Dashboard wyświetla liczbę fiszek AI vs ręcznych
   3. Dashboard pokazuje procent akceptacji fiszek AI
-  4. Dashboard pokazuje dane na temat retencji uzytkownikow
-  5. Dashboard pokazuje dane na temat zaangazowania uzytkownikow
+  4. Dashboard pokazuje dane na temat retencji uzytkownikow (pominiete na etapie MVP)
+  5. Dashboard pokazuje dane na temat zaangazowania uzytkownikow (pominiete na etapie MVP)
 
 ## 6. Metryki sukcesu
 
