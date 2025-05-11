@@ -17,44 +17,39 @@ Niniejszy dokument opisuje architekturę i implementację modułu rejestracji, l
 - **`/login`**:
     - Dostęp: Niezalogowani użytkownicy.
     - Cel: Umożliwia użytkownikom zalogowanie się do aplikacji.
-    - Layout: `AuthLayout.astro`
+    - Layout: `Layout.astro`
     - Komponent React: `LoginForm.tsx`
 - **`/register`**:
     - Dostęp: Niezalogowani użytkownicy.
     - Cel: Umożliwia nowym użytkownikom rejestrację w systemie.
-    - Layout: `AuthLayout.astro`
+    - Layout: `Layout.astro`
     - Komponent React: `RegisterForm.tsx`
 - **`/forgot-password`**:
     - Dostęp: Niezalogowani użytkownicy.
     - Cel: Pozwala użytkownikom zainicjować proces resetowania zapomnianego hasła.
-    - Layout: `AuthLayout.astro`
+    - Layout: `Layout.astro`
     - Komponent React: `ForgotPasswordForm.tsx`
 - **`/reset-password`**:
     - Dostęp: Niezalogowani użytkownicy (wymaga ważnego tokenu z emaila).
     - Cel: Umożliwia użytkownikom ustawienie nowego hasła po kliknięciu linku resetującego.
-    - Layout: `AuthLayout.astro`
+    - Layout: `Layout.astro`
     - Komponent React: `ResetPasswordForm.tsx`
 - **`/verify-email`**:
     - Dostęp: Wszyscy użytkownicy.
     - Cel: Informuje użytkownika o konieczności weryfikacji adresu email po rejestracji. Obsługuje również link weryfikacyjny, aktywując konto.
-    - Layout: `AuthLayout.astro` (lub `BaseLayout.astro` dla prostoty)
-    - Logika: Może zawierać komponent React do obsługi tokenu z URL i komunikacji z Supabase, lub logika może być częściowo w Astro (`Astro.url`).
-- **Strony chronione (np. `/dashboard`, `/account`, `/cards`)**:
+    - Layout: `Layout.astro`
+    - Logika: Zawiera komponent React do obsługi tokenu z URL i komunikacji z Supabase.
+- **Strony chronione (np. `/generate`, `/profile`, `/flashcards`, `/sessions/new`)**:
     - Dostęp: Tylko zalogowani i zweryfikowani użytkownicy.
     - Layout: `AppLayout.astro`
     - Ochrona: Realizowana przez middleware Astro.
 
 ### 3.2. Layouty Astro (`./src/layouts`)
 
-- **`AuthLayout.astro`**:
-    - Cel: Podstawowy layout dla stron związanych z procesem autentykacji (logowanie, rejestracja, reset hasła).
-    - Cechy: Minimalistyczny, bez elementów nawigacyjnych typowych dla zalogowanego użytkownika (np. menu użytkownika, nawigacja główna aplikacji). Może zawierać logo aplikacji i stopkę.
-- **`AppLayout.astro`**:
-    - Cel: Główny layout aplikacji dla zalogowanych użytkowników.
-    - Cechy: Zawiera pełną nawigację aplikacji, menu użytkownika (z opcją wylogowania), oraz inne elementy interfejsu dostępne po zalogowaniu.
-- **`BaseLayout.astro`**:
-    - Cel: Podstawowy, współdzielony layout, z którego mogą dziedziczyć `AuthLayout` i `AppLayout`.
-    - Cechy: Definiuje globalne style, metadane, sekcję `<head>`, importuje czcionki, itp.
+- **`Layout.astro`** (już zaimplementowany):
+    - Cel: Uniwersalny layout dla wszystkich stron aplikacji, adaptujący się do stanu użytkownika.
+    - Cechy: Zawiera `NavBar.astro` (z dynamicznym wyświetlaniem elementów w zależności od stanu autentykacji), `Footer.astro` oraz kontener `<main>` dla treści stron.
+    - Funkcjonalność: Automatycznie dostosowuje widok nawigacji na podstawie stanu autentykacji użytkownika, eliminując potrzebę oddzielnych layoutów dla różnych stanów.
 
 ### 3.3. Komponenty React (`./src/components`)
 
@@ -81,7 +76,7 @@ Wszystkie formularze będą korzystać z komponentów UI z biblioteki `Shadcn/ui
     - Komunikaty:
         - Błędy walidacji przy polach.
         - Ogólny błąd rejestracji (np. "Użytkownik o tym adresie email już istnieje.", "Wystąpił błąd serwera.").
-        - Sukces: Informacja o konieczności weryfikacji emaila (np. "Link weryfikacyjny został wysłany na Twój adres email.").
+        - Sukces: Informacja o konieczności weryfikacji emaila (np. "Link weryfikacyjny został wysłany na Twój adres email.") oraz automatyczne przekierowanie na dedykowaną stronę informacyjną `/verify-email`.
     - Akcja: Wywołanie endpointu `/api/auth/register` lub bezpośrednio `supabase.auth.signUp()`.
 - **`ForgotPasswordForm.tsx` (`./src/components/auth/ForgotPasswordForm.tsx`)**:
     - Pola: Email.
@@ -105,16 +100,20 @@ Wszystkie formularze będą korzystać z komponentów UI z biblioteki `Shadcn/ui
         - Ogólny błąd (np. "Link do resetowania hasła jest nieprawidłowy lub wygasł.", "Wystąpił błąd serwera.").
         - Sukces: Informacja o pomyślnej zmianie hasła i przekierowanie na `/login` (np. "Hasło zostało zmienione. Możesz się teraz zalogować.").
     - Akcja: Bezpośrednio `supabase.auth.updateUser({ password: newPassword })`.
-- **`UserNav.tsx` (`./src/components/layout/UserNav.tsx`)**:
-    - Cel: Komponent wyświetlający menu użytkownika w `AppLayout.astro`.
-    - Funkcjonalność: Wyświetla email użytkownika, link do profilu (przyszłościowo), przycisk "Wyloguj".
-    - Akcja "Wyloguj": Wywołanie endpointu `/api/auth/logout` lub bezpośrednio `supabase.auth.signOut()`.
+- **`NavBar.astro` (`./src/components/NavBar.astro`)** (już zaimplementowany):
+    - Cel: Komponent wyświetlający górną nawigację aplikacji, dostosowujący się do stanu użytkownika.
+    - Funkcjonalność dla niezalogowanych: Wyświetla linki "Zaloguj się" i "Zarejestruj się".
+    - Funkcjonalność dla zalogowanych: Wyświetla menu aplikacji (Strona główna, Generuj fiszki, Moje fiszki, Nauka), informację o zalogowanym użytkowniku oraz przycisk "Wyloguj się".
+    - Funkcjonalność dla administratorów: Dodatkowo wyświetla link do panelu administratora.
+    - Akcja "Wyloguj": Wywołanie `supabase.auth.signOut()` i przekierowanie na stronę główną.
+    - Uwaga: Ten komponent zastępuje proponowany `UserNav.tsx`, integrując jego funkcjonalność w istniejącej strukturze.
 
 ### 3.4. Integracja Astro i React
 
 - Komponenty React będą renderowane na stronach Astro z odpowiednią dyrektywą `client:*`, np. `client:load` dla formularzy, które muszą być interaktywne od razu.
-- Stan autentykacji (zalogowany/niezalogowany) będzie zarządzany globalnie, potencjalnie przez kontekst React dostarczany na najwyższym poziomie komponentów klienckich lub przez store (np. Zustand, Jotai), synchronizowany z `supabase.auth.onAuthStateChange()`.
-- Strony Astro mogą przekazywać początkowe dane do komponentów React jako props, jeśli jest to konieczne (np. tokeny z URL).
+- Stan autentykacji (zalogowany/niezalogowany) będzie odczytywany z `Astro.locals.user` (ustawianego przez middleware) w komponentach Astro oraz przekazywany do komponentów React jako props, gdy to konieczne.
+- Dla synchronizacji stanu po stronie klienta, `NavBar.astro` będzie zawierał skrypt kliencki reagujący na zmiany stanu autentykacji z `supabase.auth.onAuthStateChange()`, np. do automatycznego odświeżenia strony po wylogowaniu.
+- Obecna symulacja autentykacji poprzez parametr URL `simulatedAuth` zostanie zastąpiona rzeczywistym mechanizmem autentykacji Supabase.
 
 ### 3.5. Scenariusze Walidacji i Komunikaty Błędów
 
@@ -260,7 +259,7 @@ import { User } from '@supabase/supabase-js'; // Poprawiony import User
 import { defineMiddleware } from 'astro:middleware';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-const protectedRoutes = ['/dashboard', '/cards', '/account']; // Przykładowe chronione ścieżki
+const protectedRoutes = ['/generate', '/flashcards', '/sessions/new', '/profile', '/admin/metrics']; // Rzeczywiste ścieżki z implementacji
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -300,7 +299,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // ponieważ te strony są przeznaczone do obsługi tokenów przez niezalogowanych użytkowników.
   // Jeśli użytkownik jest zalogowany, powinien być przekierowany.
   if (user && authRoutes.some(path => currentPath.startsWith(path))) {
-    return context.redirect('/dashboard'); // Lub inna strona główna dla zalogowanych
+    return context.redirect('/'); // Przekierowanie na stronę główną
   }
   
   // Strony /verify-email i /reset-password powinny być dostępne dla niezalogowanych użytkowników.
@@ -353,10 +352,30 @@ declare namespace App {
 
 ## 6. Podsumowanie i Kluczowe Wnioski
 
-- Architektura opiera się na silnej separacji odpowiedzialności między stronami Astro (routing, SSR, middleware) a komponentami React (interfejs użytkownika formularzy, logika kliencka).
-- Supabase Auth dostarcza kompletną infrastrukturę backendową dla autentykacji, minimalizując potrzebę pisania własnej logiki po stronie serwera dla podstawowych operacji.
-- Middleware Astro jest centralnym punktem kontroli dostępu i zarządzania sesją po stronie serwera.
+- Architektura opiera się na silnej integracji z istniejącą strukturą UI, wykorzystując jeden uniwersalny `Layout.astro` z dynamicznym komponentem `NavBar.astro`.
+- Supabase Auth zapewnia kompletną infrastrukturę backendową dla autentykacji, minimalizując potrzebę pisania własnej logiki po stronie serwera.
+- Middleware Astro stanowi centralny punkt kontroli dostępu i zarządzania sesją.
 - Stosowanie `@supabase/ssr` jest kluczowe dla poprawnej integracji z Astro w trybie SSR.
-- Walidacja zarówno po stronie klienta, jak i serwera jest niezbędna dla bezpieczeństwa i dobrego UX.
-- Jasne komunikaty błędów i sukcesu poprawią doświadczenie użytkownika.
-- Strona `/verify-email` i `/reset-password` będą wymagały logiki po stronie klienta (w React lub skrypcie Astro) do obsługi tokenów z URL i komunikacji z Supabase SDK w celu sfinalizowania odpowiednich procesów.
+- System autentykacji został zaprojektowany z myślą o dalszej rozbudowie aplikacji, w tym implementacji funkcji związanych z fiszkami, sesjami nauki i statystykami.
+- Wykorzystanie istniejącego komponentu `NavBar.astro` do obsługi stanu autentykacji eliminuje potrzebę tworzenia oddzielnego komponentu.
+- Przekierowania po zalogowaniu/wylogowaniu prowadzą do strony głównej (`/`), która dostosowuje swój wygląd do stanu użytkownika.
+- Middleware chroni rzeczywiste ścieżki aplikacji zgodne z planowanymi funkcjonalnościami z PRD.
+
+## 7. Integracja z przyszłymi funkcjonalnościami
+
+Moduł autentykacji przygotowany jest do współpracy z przyszłymi funkcjonalnościami opisanymi w PRD:
+
+- **Generowanie i zarządzanie fiszkami** (US-004 do US-010):
+  - Middleware zapewnia ochronę ścieżek `/generate` i `/flashcards`.
+  - Identyfikator użytkownika z `Astro.locals.user` będzie używany do przypisywania fiszek do konkretnego użytkownika.
+  - Zabezpieczenia RLS (Row Level Security) w Supabase będą filtrować dane fiszek na podstawie ID użytkownika.
+
+- **System sesji nauki** (US-011 do US-013):
+  - Middleware chroni ścieżkę `/sessions/new`.
+  - Identyfikator użytkownika umożliwi śledzenie postępu i statystyk nauki.
+
+- **Funkcje administratora** (US-014):
+  - Middleware sprawdza rolę użytkownika dla dostępu do `/admin/metrics`.
+  - Supabase Auth pozwala na definiowanie różnych poziomów dostępu.
+
+Ta integracja zapewnia, że moduł autentykacji będzie płynnie współpracował z rozwijającymi się funkcjonalnościami aplikacji, zachowując bezpieczeństwo danych i odpowiednie zarządzanie uprawnieniami.
