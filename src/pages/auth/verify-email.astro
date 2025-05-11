@@ -1,58 +1,55 @@
+---
 import Layout from '@/layouts/Layout.astro';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming these can be used in Astro directly or via an Astro component wrapper
 
 // TODO: Implement client-side logic for handling the verification token from the URL.
 // This will likely involve a <script> tag, or a client-side React/Astro component,
 // that interacts with Supabase.auth.onAuthStateChange() or similar to handle the token.
+---
 
 <Layout title="Weryfikacja Emaila | 10x Cards">
   <div class="flex justify-center items-center min-h-[calc(100vh-var(--navbar-height)-var(--footer-height))]">
-    <Card class="w-full max-w-md text-center">
-      <CardHeader>
-        <CardTitle>Potwierdź Swój Adres Email</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription>
+    <div class="w-full max-w-md bg-card text-card-foreground rounded-lg border shadow-sm text-center p-6 md:p-8">
+      <div class="flex flex-col space-y-1.5 pb-6">
+        <h3 class="text-2xl font-semibold leading-none tracking-tight">Potwierdź Swój Adres Email</h3>
+      </div>
+      <div class="text-sm text-muted-foreground">
+        <p>
           Link weryfikacyjny został wysłany na Twój adres email. 
           Sprawdź swoją skrzynkę odbiorczą (oraz folder spam) i kliknij w link, aby aktywować konto.
-        </CardDescription>
-        <p class="text-sm text-muted-foreground mt-4">
+        </p>
+        <p class="mt-4">
           Jeśli nie otrzymałeś emaila, sprawdź czy podałeś poprawny adres i spróbuj ponownie lub skontaktuj się z pomocą.
         </p>
         {/* TODO: Potentially add a button to resend verification email */}
         {/* TODO: Display messages based on token processing (e.g., success, error, invalid token) */}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   </div>
 </Layout>
 
 <script>
   // Placeholder for client-side Supabase logic to handle the verification token from the URL
-  // For example, using supabase.auth.onAuthStateChange to detect MFA_CHALLENGE_VERIFIED or similar events
-  // or directly processing a token from URL if Supabase sends it that way for email verification.
-  // This script would then update the UI or redirect the user.
+  console.log('[verify-email.astro] Strona załadowana, oczekiwanie na logikę obsługi tokenu.');
 
-  // import { supabase } from '@/db/supabase'; // Adjust import path as necessary
+  // import { supabase } from '@/db/supabase'; // Dostosuj ścieżkę importu
 
   // supabase.auth.onAuthStateChange(async (event, session) => {
-  //   if (event === 'SIGNED_IN' && session?.user && session.user.email_confirmed_at) {
-  //     // Email confirmed, redirect to a protected page or dashboard
-  //     // window.location.href = '/'; 
-  //     console.log("Email weryfikowany, użytkownik zalogowany.");
-  //   } else if (event === 'USER_UPDATED' && session?.user && session.user.email_confirmed_at) {
-  //      console.log("Email weryfikowany po aktualizacji użytkownika.");
-  //      // Potentially redirect or update UI
+  //   console.log('[verify-email.astro] onAuthStateChange event:', event, 'session:', session);
+  //   if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+  //     console.log('[verify-email.astro] Email zweryfikowany, użytkownik zalogowany. Przekierowanie...');
+  //     // window.location.href = '/'; // Przekieruj na stronę główną lub dashboard
+  //   } else if (event === 'USER_UPDATED' && session?.user?.email_confirmed_at) {
+  //     console.log('[verify-email.astro] Email zweryfikowany po aktualizacji użytkownika. Przekierowanie...');
+  //     // window.location.href = '/';
   //   }
-    
-    // Further logic to handle tokens from URL if not automatically handled by onAuthStateChange
-    // const hash = window.location.hash.substring(1);
-    // const params = new URLSearchParams(hash);
-    // const accessToken = params.get('access_token');
-    // const type = params.get('type');
-
-    // if (type === 'email_change' || type === 'recovery' || type === 'signup') {
-      // console.log('Obsługa tokenu z URL', type, accessToken);
-      // Potrzebna będzie integracja z Supabase SDK do weryfikacji i przetworzenia tego tokenu
-    // }
+  //   // Można dodać obsługę parametrów z URL, jeśli Supabase wysyła token w ten sposób dla weryfikacji
+  //   const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  //   const accessToken = hashParams.get('access_token');
+  //   const tokenType = hashParams.get('type');
+  //   if (tokenType === 'signup' && accessToken) {
+  //     console.log('[verify-email.astro] Wykryto token weryfikacyjny w URL. Próba weryfikacji...');
+  //     // Tutaj można by potencjalnie użyć supabase.auth.verifyOtp lub podobnej metody, jeśli jest to wymagane
+  //     // Jednakże, często onAuthStateChange samo obsłuży sesję po kliknięciu linku
+  //   }
   // });
 </script> 
