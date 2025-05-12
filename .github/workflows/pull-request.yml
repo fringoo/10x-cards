@@ -1,0 +1,96 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    name: Lintowanie kodu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Lintowanie
+        run: npm run lint
+
+  test:
+    name: Unit testy
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Uruchomienie testów z pokryciem
+        run: npx vitest run --coverage
+        
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 5
+
+  status-comment:
+    name: Dodanie komentarza o statusie
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Tworzenie komentarza PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let coverageSummary = '';
+            
+            try {
+              // Próba odczytania pliku podsumowania pokrycia
+              const coverageData = fs.readFileSync('./coverage/coverage-summary.json', 'utf8');
+              const coverage = JSON.parse(coverageData);
+              const totalCoverage = coverage.total.statements.pct;
+              coverageSummary = `📊 **Pokrycie kodu:** ${totalCoverage}%`;
+            } catch (error) {
+              console.error('Nie udało się odczytać danych pokrycia:', error);
+              coverageSummary = '📊 **Pokrycie kodu:** Brak danych';
+            }
+            
+            const comment = `## ✅ Testy i lintowanie przeszły pomyślnie!
+            
+            ${coverageSummary}
+            
+            🚀 PR gotowy do mergowania.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            }); 
