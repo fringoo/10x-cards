@@ -1,15 +1,15 @@
-import '@testing-library/jest-dom';
-import { vi, beforeEach } from 'vitest';
-import * as matchers from '@testing-library/jest-dom/matchers';
-import { expect } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi, beforeEach } from "vitest";
+import * as matchers from "@testing-library/jest-dom/matchers";
+import { expect } from "vitest";
 
 // Rozszerzam matchers dla expect
 expect.extend(matchers);
 
 // Globalne mock-e
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,

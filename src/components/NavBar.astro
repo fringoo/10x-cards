@@ -3,7 +3,7 @@
 // Stan autentykacji będzie teraz pochodził z Astro.locals.user
 const { user } = Astro.locals; // user będzie obiektem User z Supabase lub null
 const isAuthenticated = !!user;
-const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzenie roli admina, dostosuj wg potrzeb
+const isAdmin = user?.app_metadata?.role === "admin"; // Przykładowe sprawdzenie roli admina, dostosuj wg potrzeb
 ---
 
 <nav class="bg-gray-800 text-white p-4">
@@ -17,19 +17,33 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
       {
         !isAuthenticated && (
           <>
-            <a href="/auth/login" class="px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
-            <a href="/auth/register" class="px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+            <a href="/auth/login" class="px-3 py-2 rounded hover:bg-gray-700">
+              Zaloguj się
+            </a>
+            <a href="/auth/register" class="px-3 py-2 rounded hover:bg-gray-700">
+              Zarejestruj się
+            </a>
           </>
         )
       }
       {
         isAuthenticated && user && (
           <>
-            <a href="/" class="px-3 py-2 rounded hover:bg-gray-700">Strona główna</a>
-            <a href="/generate" class="px-3 py-2 rounded hover:bg-gray-700">Generuj fiszki</a>
-            <a href="/manage-collections" class="px-3 py-2 rounded hover:bg-gray-700">Moje fiszki</a>
-            <a href="/sessions/new" class="px-3 py-2 rounded hover:bg-gray-700">Nauka</a>
-            <a href="/statistics" class="px-3 py-2 rounded hover:bg-gray-700">Statystyki Systemu</a>
+            <a href="/" class="px-3 py-2 rounded hover:bg-gray-700">
+              Strona główna
+            </a>
+            <a href="/generate" class="px-3 py-2 rounded hover:bg-gray-700">
+              Generuj fiszki
+            </a>
+            <a href="/manage-collections" class="px-3 py-2 rounded hover:bg-gray-700">
+              Moje fiszki
+            </a>
+            <a href="/sessions/new" class="px-3 py-2 rounded hover:bg-gray-700">
+              Nauka
+            </a>
+            <a href="/statistics" class="px-3 py-2 rounded hover:bg-gray-700">
+              Statystyki Systemu
+            </a>
             <a href="/profile" class="px-3 py-2 rounded hover:bg-gray-700">
               Profil
             </a>
@@ -39,10 +53,12 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
               </a>
             )}
             {/* Użycie user.email lub innej właściwości z obiektu User Supabase */}
-            <span class="px-3 py-2">Witaj, {user.email || user.id}</span> 
+            <span class="px-3 py-2">Witaj, {user.email || user.id}</span>
             {/* Przycisk wylogowania będzie wymagał interakcji z API, na razie zostawiamy jako link */}
             {/* Docelowo, to powinien być formularz POST lub wywołanie JS do /api/auth/logout */}
-            <a href="#" id="logout-button-desktop" class="px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            <a href="#" id="logout-button-desktop" class="px-3 py-2 rounded hover:bg-gray-700">
+              Wyloguj się
+            </a>
           </>
         )
       }
@@ -50,7 +66,11 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
 
     {/* Mobile Menu Button - visible on small screens */}
     <div class="md:hidden">
-      <button id="mobile-menu-button" aria-label="Otwórz menu" class="text-white focus:outline-none hover:text-gray-300">
+      <button
+        id="mobile-menu-button"
+        aria-label="Otwórz menu"
+        class="text-white focus:outline-none hover:text-gray-300"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
         </svg>
@@ -64,19 +84,33 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
       {
         !isAuthenticated && (
           <>
-            <a href="/auth/login" class="block px-3 py-2 rounded hover:bg-gray-700">Zaloguj się</a>
-            <a href="/auth/register" class="block px-3 py-2 rounded hover:bg-gray-700">Zarejestruj się</a>
+            <a href="/auth/login" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Zaloguj się
+            </a>
+            <a href="/auth/register" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Zarejestruj się
+            </a>
           </>
         )
       }
       {
         isAuthenticated && user && (
           <>
-            <a href="/" class="block px-3 py-2 rounded hover:bg-gray-700">Strona główna</a>
-            <a href="/generate" class="block px-3 py-2 rounded hover:bg-gray-700">Generuj fiszki</a>
-            <a href="/manage-collections" class="block px-3 py-2 rounded hover:bg-gray-700">Moje fiszki</a>
-            <a href="/sessions/new" class="block px-3 py-2 rounded hover:bg-gray-700">Nauka</a>
-            <a href="/statistics" class="block px-3 py-2 rounded hover:bg-gray-700">Statystyki Systemu</a>
+            <a href="/" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Strona główna
+            </a>
+            <a href="/generate" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Generuj fiszki
+            </a>
+            <a href="/manage-collections" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Moje fiszki
+            </a>
+            <a href="/sessions/new" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Nauka
+            </a>
+            <a href="/statistics" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Statystyki Systemu
+            </a>
             <a href="/profile" class="block px-3 py-2 rounded hover:bg-gray-700">
               Profil
             </a>
@@ -86,7 +120,9 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
               </a>
             )}
             <span class="block px-3 py-2">Witaj, {user.email || user.id}</span>
-            <a href="#" id="logout-button-mobile" class="block px-3 py-2 rounded hover:bg-gray-700">Wyloguj się</a>
+            <a href="#" id="logout-button-mobile" class="block px-3 py-2 rounded hover:bg-gray-700">
+              Wyloguj się
+            </a>
           </>
         )
       }
@@ -96,10 +132,10 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
 
 <script>
   // Skrypt do obsługi menu mobilnego
-  const mobileMenuButton = document.getElementById('mobile-menu-button');
-  const mobileMenu = document.getElementById('mobile-menu');
-  mobileMenuButton?.addEventListener('click', () => {
-    mobileMenu?.classList.toggle('hidden');
+  const mobileMenuButton = document.getElementById("mobile-menu-button");
+  const mobileMenu = document.getElementById("mobile-menu");
+  mobileMenuButton?.addEventListener("click", () => {
+    mobileMenu?.classList.toggle("hidden");
   });
 
   // Prosta obsługa wylogowania po stronie klienta (docelowo powinno być bardziej rozbudowane)
@@ -107,23 +143,22 @@ const isAdmin = user?.app_metadata?.role === 'admin'; // Przykładowe sprawdzeni
   async function handleLogout(event: Event) {
     event.preventDefault();
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
       });
       if (response.ok) {
-        window.location.href = '/'; // Przekieruj na stronę główną po wylogowaniu
+        window.location.href = "/"; // Przekieruj na stronę główną po wylogowaniu
       } else {
-        console.error('Błąd podczas wylogowywania');
+        console.error("Błąd podczas wylogowywania");
         // Można dodać powiadomienie dla użytkownika
       }
     } catch (error) {
-      console.error('Błąd sieci podczas wylogowywania', error);
+      console.error("Błąd sieci podczas wylogowywania", error);
     }
   }
 
-  document.getElementById('logout-button-desktop')?.addEventListener('click', handleLogout);
-  document.getElementById('logout-button-mobile')?.addEventListener('click', handleLogout);
-
+  document.getElementById("logout-button-desktop")?.addEventListener("click", handleLogout);
+  document.getElementById("logout-button-mobile")?.addEventListener("click", handleLogout);
 </script>
 
-<!-- TODO: Implement mobile hamburger menu --> 
+<!-- TODO: Implement mobile hamburger menu -->

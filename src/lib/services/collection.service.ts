@@ -9,7 +9,16 @@ export type FlashcardUpdatePayload = Database["public"]["Tables"]["flashcards"][
 export type CollectionBasicInfo = Pick<Database["public"]["Tables"]["collections"]["Row"], "id" | "name">;
 export type FlashcardDetailsDTO = Pick<
   Database["public"]["Tables"]["flashcards"]["Row"],
-  "id" | "front" | "back" | "source" | "ai_modified_by_user" | "ai_approval_status" | "collection_id" | "user_id" | "created_at" | "updated_at"
+  | "id"
+  | "front"
+  | "back"
+  | "source"
+  | "ai_modified_by_user"
+  | "ai_approval_status"
+  | "collection_id"
+  | "user_id"
+  | "created_at"
+  | "updated_at"
 >;
 
 /**
@@ -163,13 +172,13 @@ export async function getFlashcardsByCollectionId(
   userId: string,
   collectionId: string
 ): Promise<{ flashcards: FlashcardDetailsDTO[] | null; error: PostgrestError | string | null }> {
-  console.log(
-    `[CollectionService] Attempting to fetch flashcards for collection ${collectionId} and user ${userId}`
-  );
+  console.log(`[CollectionService] Attempting to fetch flashcards for collection ${collectionId} and user ${userId}`);
   try {
     const { data, error } = await supabase
       .from("flashcards")
-      .select("id, front, back, source, ai_modified_by_user, ai_approval_status, collection_id, user_id, created_at, updated_at")
+      .select(
+        "id, front, back, source, ai_modified_by_user, ai_approval_status, collection_id, user_id, created_at, updated_at"
+      )
       .eq("user_id", userId)
       .eq("collection_id", collectionId)
       .order("created_at", { ascending: true });
@@ -235,22 +244,23 @@ export async function updateFlashcard(
         error: fetchError ? fetchError.message : "Flashcard not found or user mismatch.",
       };
     }
-    
+
     // Prepare the final update payload
     const updatePayload: FlashcardUpdatePayload = { ...updates };
-    if ((updates.front || updates.back) && existingFlashcard.source === 'ai' && updates.ai_modified_by_user !== false) {
-        // If front/back of an AI card is changed, and ai_modified_by_user is not explicitly set to false,
-        // then it has been modified by the user.
-        updatePayload.ai_modified_by_user = true;
+    if ((updates.front || updates.back) && existingFlashcard.source === "ai" && updates.ai_modified_by_user !== false) {
+      // If front/back of an AI card is changed, and ai_modified_by_user is not explicitly set to false,
+      // then it has been modified by the user.
+      updatePayload.ai_modified_by_user = true;
     }
-
 
     const { data, error: updateError } = await supabase
       .from("flashcards")
       .update(updatePayload)
       .eq("id", flashcardId)
       // .eq("user_id", userId) // Redundant due to prior check, but good for safety in direct Supabase calls
-      .select("id, front, back, source, ai_modified_by_user, ai_approval_status, collection_id, user_id, created_at, updated_at")
+      .select(
+        "id, front, back, source, ai_modified_by_user, ai_approval_status, collection_id, user_id, created_at, updated_at"
+      )
       .single();
 
     if (updateError) {
@@ -287,21 +297,25 @@ export async function deleteFlashcard(
   try {
     // Optional: Verify ownership before delete if RLS is not solely relied upon or for clearer error messages
     const { count, error: checkError } = await supabase
-        .from("flashcards")
-        .select('*', { count: 'exact', head: true })
-        .eq("id", flashcardId)
-        .eq("user_id", userId);
+      .from("flashcards")
+      .select("*", { count: "exact", head: true })
+      .eq("id", flashcardId)
+      .eq("user_id", userId);
 
     if (checkError) {
-        console.error(`[CollectionService] Error checking flashcard ${flashcardId} ownership:`, checkError);
-        return { success: false, error: checkError.message };
+      console.error(`[CollectionService] Error checking flashcard ${flashcardId} ownership:`, checkError);
+      return { success: false, error: checkError.message };
     }
     if (count === 0) {
-        console.warn(`[CollectionService] Flashcard ${flashcardId} not found or does not belong to user ${userId}.`);
-        return { success: false, error: "Flashcard not found or permission denied." };
+      console.warn(`[CollectionService] Flashcard ${flashcardId} not found or does not belong to user ${userId}.`);
+      return { success: false, error: "Flashcard not found or permission denied." };
     }
 
-    const { error: deleteError } = await supabase.from("flashcards").delete().eq("id", flashcardId).eq("user_id", userId); // Ensure user_id match
+    const { error: deleteError } = await supabase
+      .from("flashcards")
+      .delete()
+      .eq("id", flashcardId)
+      .eq("user_id", userId); // Ensure user_id match
 
     if (deleteError) {
       console.error(`[CollectionService] Error deleting flashcard ${flashcardId}:`, deleteError);

@@ -17,7 +17,10 @@ export const GET: APIRoute = async ({ params, locals }) => {
     return new Response("Brak ID kolekcji.", { status: 400 });
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError) {
     console.error("Błąd autoryzacji podczas pobierania fiszek:", userError.message);
@@ -28,11 +31,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   }
 
   try {
-    const { flashcards, error: serviceError } = await getFlashcardsByCollectionId(
-      supabase,
-      user.id,
-      collectionId
-    );
+    const { flashcards, error: serviceError } = await getFlashcardsByCollectionId(supabase, user.id, collectionId);
 
     if (serviceError) {
       console.error(`Błąd podczas pobierania fiszek dla kolekcji ${collectionId}:`, serviceError);
@@ -52,4 +51,4 @@ export const GET: APIRoute = async ({ params, locals }) => {
     console.error(`Nieoczekiwany błąd serwera dla GET /api/collections/${collectionId}/flashcards:`, e);
     return new Response("Wystąpił wewnętrzny błąd serwera.", { status: 500 });
   }
-}; 
+};

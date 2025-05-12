@@ -12,7 +12,10 @@ export const GET: APIRoute = async ({ cookies, redirect, locals }) => {
     return new Response("Błąd konfiguracji serwera: Klient Supabase nie jest dostępny.", { status: 500 });
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError) {
     console.error("Błąd podczas pobierania użytkownika (auth.getUser):");
@@ -44,4 +47,4 @@ export const GET: APIRoute = async ({ cookies, redirect, locals }) => {
     console.error("Nieoczekiwany błąd serwera w GET /api/collections:", e);
     return new Response("Wystąpił wewnętrzny błąd serwera.", { status: 500 });
   }
-}; 
+};

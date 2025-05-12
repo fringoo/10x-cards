@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import type { CollectionBasicInfo, FlashcardDetailsDTO } from '@/lib/services/collection.service';
+import React, { useState, useEffect, useCallback } from "react";
+import type { CollectionBasicInfo, FlashcardDetailsDTO } from "@/lib/services/collection.service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,7 +42,7 @@ const CollectionManager: React.FC = () => {
     setIsLoadingCollections(true);
     setError(null);
     try {
-      const response = await fetch('/api/collections');
+      const response = await fetch("/api/collections");
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
@@ -51,7 +51,7 @@ const CollectionManager: React.FC = () => {
       setCollections(data);
     } catch (e: any) {
       console.error("Błąd podczas pobierania kolekcji:", e);
-      setError(e.message || 'Nie udało się pobrać kolekcji.');
+      setError(e.message || "Nie udało się pobrać kolekcji.");
       setCollections([]); // Wyczyść kolekcje w przypadku błędu
     } finally {
       setIsLoadingCollections(false);
@@ -73,7 +73,7 @@ const CollectionManager: React.FC = () => {
       setFlashcards(data);
     } catch (e: any) {
       console.error(`Błąd podczas pobierania fiszek dla kolekcji ${collectionId}:`, e);
-      setError(e.message || 'Nie udało się pobrać fiszek.');
+      setError(e.message || "Nie udało się pobrać fiszek.");
       setFlashcards([]); // Wyczyść fiszki w przypadku błędu
     } finally {
       setIsLoadingFlashcards(false);
@@ -93,7 +93,7 @@ const CollectionManager: React.FC = () => {
     }
   }, [selectedCollectionId, fetchFlashcards]);
 
-  // --- Obsługa Edycji --- 
+  // --- Obsługa Edycji ---
   const handleEditClick = (flashcard: FlashcardDetailsDTO) => {
     setEditingFlashcard({ id: flashcard.id, front: flashcard.front, back: flashcard.back });
   };
@@ -108,12 +108,12 @@ const CollectionManager: React.FC = () => {
     setUpdatingFlashcardId(editingFlashcard.id);
     try {
       const response = await fetch(`/api/flashcards/${editingFlashcard.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          front: editingFlashcard.front, 
-          back: editingFlashcard.back, 
-          ai_modified_by_user: true // Edycja treści zawsze oznacza modyfikację przez użytkownika
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          front: editingFlashcard.front,
+          back: editingFlashcard.back,
+          ai_modified_by_user: true, // Edycja treści zawsze oznacza modyfikację przez użytkownika
         }),
       });
       if (!response.ok) {
@@ -121,25 +121,25 @@ const CollectionManager: React.FC = () => {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       const updatedFlashcard: FlashcardDetailsDTO = await response.json();
-      setFlashcards(prevFlashcards => 
-        prevFlashcards.map(fc => fc.id === updatedFlashcard.id ? updatedFlashcard : fc)
+      setFlashcards((prevFlashcards) =>
+        prevFlashcards.map((fc) => (fc.id === updatedFlashcard.id ? updatedFlashcard : fc))
       );
       setEditingFlashcard(null);
     } catch (e: any) {
       console.error(`Błąd podczas zapisywania fiszki ${editingFlashcard.id}:`, e);
-      setError(e.message || 'Nie udało się zapisać zmian w fiszce.');
+      setError(e.message || "Nie udało się zapisać zmian w fiszce.");
     } finally {
       setUpdatingFlashcardId(null);
     }
   };
 
-  const handleEditingChange = (field: 'front' | 'back', value: string) => {
+  const handleEditingChange = (field: "front" | "back", value: string) => {
     if (editingFlashcard) {
-      setEditingFlashcard(prev => prev ? { ...prev, [field]: value } : null);
+      setEditingFlashcard((prev) => (prev ? { ...prev, [field]: value } : null));
     }
   };
 
-  // --- Obsługa Usuwania --- 
+  // --- Obsługa Usuwania ---
   const handleDeleteClick = async (flashcardId: string) => {
     // TODO: Dodać modal potwierdzenia
     if (!confirm("Czy na pewno chcesz usunąć tę fiszkę? Tej operacji nie można cofnąć.")) {
@@ -149,47 +149,47 @@ const CollectionManager: React.FC = () => {
     setUpdatingFlashcardId(flashcardId);
     try {
       const response = await fetch(`/api/flashcards/${flashcardId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (!response.ok && response.status !== 204) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      setFlashcards(prevFlashcards => prevFlashcards.filter(fc => fc.id !== flashcardId));
+      setFlashcards((prevFlashcards) => prevFlashcards.filter((fc) => fc.id !== flashcardId));
     } catch (e: any) {
       console.error(`Błąd podczas usuwania fiszki ${flashcardId}:`, e);
-      setError(e.message || 'Nie udało się usunąć fiszki.');
+      setError(e.message || "Nie udało się usunąć fiszki.");
     } finally {
       setUpdatingFlashcardId(null);
     }
   };
-  
-  const handleApprovalStatusChange = async (flashcardId: string, newStatus: 'approved' | 'rejected') => {
+
+  const handleApprovalStatusChange = async (flashcardId: string, newStatus: "approved" | "rejected") => {
     setError(null);
     setUpdatingFlashcardId(flashcardId);
     try {
       const response = await fetch(`/api/flashcards/${flashcardId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ai_approval_status: newStatus }), 
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ai_approval_status: newStatus }),
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       const updatedFlashcard: FlashcardDetailsDTO = await response.json();
-      setFlashcards(prevFlashcards => 
-        prevFlashcards.map(fc => fc.id === updatedFlashcard.id ? updatedFlashcard : fc)
+      setFlashcards((prevFlashcards) =>
+        prevFlashcards.map((fc) => (fc.id === updatedFlashcard.id ? updatedFlashcard : fc))
       );
     } catch (e: any) {
       console.error(`Błąd podczas aktualizacji statusu fiszki ${flashcardId}:`, e);
-      setError(e.message || 'Nie udało się zaktualizować statusu fiszki.');
+      setError(e.message || "Nie udało się zaktualizować statusu fiszki.");
     } finally {
       setUpdatingFlashcardId(null);
     }
   };
 
-  // --- Renderowanie --- 
+  // --- Renderowanie ---
 
   if (isLoadingCollections) {
     return <div className="text-center p-4">Ładowanie kolekcji...</div>;
@@ -197,19 +197,23 @@ const CollectionManager: React.FC = () => {
 
   // Renderowanie głównego błędu (np. problem z pobraniem kolekcji)
   if (error && collections.length === 0) {
-      return <Alert variant="destructive" className="my-4">
-          <AlertTitle>Błąd</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-      </Alert>;
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertTitle>Błąd</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="collection-select" className="text-sm font-medium">Wybierz kolekcję:</Label>
-        <Select 
-          value={selectedCollectionId || ''} 
-          onValueChange={(value: string) => setSelectedCollectionId(value === '' ? null : value)}
+        <Label htmlFor="collection-select" className="text-sm font-medium">
+          Wybierz kolekcję:
+        </Label>
+        <Select
+          value={selectedCollectionId || ""}
+          onValueChange={(value: string) => setSelectedCollectionId(value === "" ? null : value)}
           disabled={collections.length === 0 || isLoadingCollections}
         >
           <SelectTrigger id="collection-select" className="w-full md:w-[300px] mt-1">
@@ -217,23 +221,31 @@ const CollectionManager: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             {isLoadingCollections ? (
-                <SelectItem value="" disabled>Ładowanie...</SelectItem>
+              <SelectItem value="" disabled>
+                Ładowanie...
+              </SelectItem>
             ) : collections.length === 0 ? (
-                <SelectItem value="" disabled>Brak dostępnych kolekcji</SelectItem>
+              <SelectItem value="" disabled>
+                Brak dostępnych kolekcji
+              </SelectItem>
             ) : (
-                collections.map(col => (
-                <SelectItem key={col.id} value={col.id}>{col.name}</SelectItem>
-                ))
+              collections.map((col) => (
+                <SelectItem key={col.id} value={col.id}>
+                  {col.name}
+                </SelectItem>
+              ))
             )}
           </SelectContent>
         </Select>
       </div>
 
       {/* Komunikat o błędzie podczas ładowania fiszek lub operacji na fiszkach */}
-      {error && <Alert variant="destructive" className="my-2">
+      {error && (
+        <Alert variant="destructive" className="my-2">
           <AlertTitle>Błąd</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
-      </Alert>}
+        </Alert>
+      )}
 
       {isLoadingFlashcards && <div className="text-center p-4">Ładowanie fiszek...</div>}
 
@@ -246,28 +258,38 @@ const CollectionManager: React.FC = () => {
 
       {flashcards.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {flashcards.map(fc => (
+          {flashcards.map((fc) => (
             <Card key={fc.id} className="flex flex-col">
               <CardHeader className="pb-3">
                 {editingFlashcard?.id === fc.id ? (
                   <CardTitle className="text-lg">Edytujesz fiszkę...</CardTitle>
                 ) : (
-                  <CardTitle className="text-lg truncate" title={fc.front}> {/* Pokaż tylko część przodu */}
-                    {fc.front.substring(0, 100) + (fc.front.length > 100 ? '...' : '')}
+                  <CardTitle className="text-lg truncate" title={fc.front}>
+                    {" "}
+                    {/* Pokaż tylko część przodu */}
+                    {fc.front.substring(0, 100) + (fc.front.length > 100 ? "..." : "")}
                   </CardTitle>
                 )}
                 <div className="flex space-x-2 pt-1 flex-wrap gap-y-1">
-                    {fc.source === 'ai' && (
-                        <Badge 
-                            variant={fc.ai_approval_status === 'rejected' ? 'destructive' : fc.ai_approval_status === 'pending' || !fc.ai_approval_status ? 'secondary' : 'default'}
-                            className={fc.ai_approval_status === 'approved' ? 'bg-green-100 text-green-700 border border-green-300' : ''}
-                        >
-                            AI: {fc.ai_approval_status || 'pending'}
-                        </Badge>
-                    )}
-                    {fc.ai_modified_by_user && (
-                        <Badge variant="outline">Zmodyfikowana</Badge>
-                    )}
+                  {fc.source === "ai" && (
+                    <Badge
+                      variant={
+                        fc.ai_approval_status === "rejected"
+                          ? "destructive"
+                          : fc.ai_approval_status === "pending" || !fc.ai_approval_status
+                            ? "secondary"
+                            : "default"
+                      }
+                      className={
+                        fc.ai_approval_status === "approved"
+                          ? "bg-green-100 text-green-700 border border-green-300"
+                          : ""
+                      }
+                    >
+                      AI: {fc.ai_approval_status || "pending"}
+                    </Badge>
+                  )}
+                  {fc.ai_modified_by_user && <Badge variant="outline">Zmodyfikowana</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="flex-grow">
@@ -275,20 +297,20 @@ const CollectionManager: React.FC = () => {
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor={`edit-front-${fc.id}`}>Przód</Label>
-                      <Textarea 
+                      <Textarea
                         id={`edit-front-${fc.id}`}
-                        value={editingFlashcard.front} 
-                        onChange={e => handleEditingChange('front', e.target.value)} 
+                        value={editingFlashcard.front}
+                        onChange={(e) => handleEditingChange("front", e.target.value)}
                         rows={3}
                         className="mt-1"
                       />
                     </div>
                     <div>
                       <Label htmlFor={`edit-back-${fc.id}`}>Tył</Label>
-                      <Textarea 
+                      <Textarea
                         id={`edit-back-${fc.id}`}
-                        value={editingFlashcard.back} 
-                        onChange={e => handleEditingChange('back', e.target.value)} 
+                        value={editingFlashcard.back}
+                        onChange={(e) => handleEditingChange("back", e.target.value)}
                         rows={3}
                         className="mt-1"
                       />
@@ -296,46 +318,67 @@ const CollectionManager: React.FC = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground min-h-[60px]">
-                    {fc.back.substring(0, 150) + (fc.back.length > 150 ? '...' : '')}
+                    {fc.back.substring(0, 150) + (fc.back.length > 150 ? "..." : "")}
                   </p>
                 )}
               </CardContent>
               <div className="p-4 pt-2 border-t mt-auto">
                 {editingFlashcard?.id === fc.id ? (
                   <div className="flex justify-end space-x-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={updatingFlashcardId === fc.id}>Anuluj</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      disabled={updatingFlashcardId === fc.id}
+                    >
+                      Anuluj
+                    </Button>
                     <Button size="sm" onClick={handleSaveEdit} disabled={updatingFlashcardId === fc.id}>
-                      {updatingFlashcardId === fc.id && editingFlashcard ? 'Zapisywanie...' : 'Zapisz'}
+                      {updatingFlashcardId === fc.id && editingFlashcard ? "Zapisywanie..." : "Zapisz"}
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEditClick(fc)} disabled={!!updatingFlashcardId}>Edytuj</Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(fc.id)} disabled={!!updatingFlashcardId}>
-                            {updatingFlashcardId === fc.id && !editingFlashcard ? 'Usuwanie...' : 'Usuń'}
-                        </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditClick(fc)}
+                        disabled={!!updatingFlashcardId}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteClick(fc.id)}
+                        disabled={!!updatingFlashcardId}
+                      >
+                        {updatingFlashcardId === fc.id && !editingFlashcard ? "Usuwanie..." : "Usuń"}
+                      </Button>
                     </div>
-                    {fc.source === 'ai' && (
-                        <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
-                            <Button 
-                                variant={fc.ai_approval_status === 'approved' ? "default" : "outline"} 
-                                size="sm" 
-                                onClick={() => handleApprovalStatusChange(fc.id, 'approved')} 
-                                disabled={!!updatingFlashcardId || fc.ai_approval_status === 'approved'}
-                                className={fc.ai_approval_status === 'approved' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                            >
-                                {updatingFlashcardId === fc.id ? '...' : 'Zaakceptuj'}
-                            </Button>
-                            <Button 
-                                variant={fc.ai_approval_status === 'rejected' ? "destructive" : "outline"} 
-                                size="sm" 
-                                onClick={() => handleApprovalStatusChange(fc.id, 'rejected')} 
-                                disabled={!!updatingFlashcardId || fc.ai_approval_status === 'rejected'}
-                            >
-                                {updatingFlashcardId === fc.id ? '...' : 'Odrzuć'}
-                            </Button>
-                        </div>
+                    {fc.source === "ai" && (
+                      <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
+                        <Button
+                          variant={fc.ai_approval_status === "approved" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleApprovalStatusChange(fc.id, "approved")}
+                          disabled={!!updatingFlashcardId || fc.ai_approval_status === "approved"}
+                          className={
+                            fc.ai_approval_status === "approved" ? "bg-green-600 hover:bg-green-700 text-white" : ""
+                          }
+                        >
+                          {updatingFlashcardId === fc.id ? "..." : "Zaakceptuj"}
+                        </Button>
+                        <Button
+                          variant={fc.ai_approval_status === "rejected" ? "destructive" : "outline"}
+                          size="sm"
+                          onClick={() => handleApprovalStatusChange(fc.id, "rejected")}
+                          disabled={!!updatingFlashcardId || fc.ai_approval_status === "rejected"}
+                        >
+                          {updatingFlashcardId === fc.id ? "..." : "Odrzuć"}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -348,4 +391,4 @@ const CollectionManager: React.FC = () => {
   );
 };
 
-export default CollectionManager; 
+export default CollectionManager;

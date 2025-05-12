@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import type { SystemStatistics } from '@/lib/services/statistics.service'; // Importujemy główny typ
+import React, { useState, useEffect, useCallback } from "react";
+import type { SystemStatistics } from "@/lib/services/statistics.service"; // Importujemy główny typ
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress"; // Do wyświetlania np. współczynnika akceptacji
@@ -13,7 +13,7 @@ const StatisticsDashboard: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/statistics');
+      const response = await fetch("/api/statistics");
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
@@ -22,7 +22,7 @@ const StatisticsDashboard: React.FC = () => {
       setStats(data);
     } catch (e: any) {
       console.error("Błąd podczas pobierania statystyk systemowych:", e);
-      setError(e.message || 'Nie udało się pobrać statystyk systemowych.');
+      setError(e.message || "Nie udało się pobrać statystyk systemowych.");
       setStats(null);
     } finally {
       setIsLoading(false);
@@ -79,10 +79,10 @@ const StatisticsDashboard: React.FC = () => {
           </div>
           <div>
             <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-muted-foreground">Procent akceptacji fiszek AI:</span>
-                <span className="font-semibold text-sm">
-                    {flashcardStats.aiAcceptanceRate !== null ? `${flashcardStats.aiAcceptanceRate.toFixed(2)}%` : 'N/A'}
-                </span>
+              <span className="text-sm text-muted-foreground">Procent akceptacji fiszek AI:</span>
+              <span className="font-semibold text-sm">
+                {flashcardStats.aiAcceptanceRate !== null ? `${flashcardStats.aiAcceptanceRate.toFixed(2)}%` : "N/A"}
+              </span>
             </div>
             {flashcardStats.aiAcceptanceRate !== null && (
               <Progress value={flashcardStats.aiAcceptanceRate} className="h-2" />
@@ -109,4 +109,4 @@ const StatisticsDashboard: React.FC = () => {
   );
 };
 
-export default StatisticsDashboard; 
+export default StatisticsDashboard;

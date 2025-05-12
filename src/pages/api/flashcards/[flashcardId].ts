@@ -7,14 +7,16 @@ import { z, ZodError } from "zod";
 export const prerender = false;
 
 // Schemat Zod do walidacji danych wejściowych dla aktualizacji fiszki
-const FlashcardUpdateSchema = z.object({
-  front: z.string().min(1, "Pole 'front' nie może być puste.").optional(),
-  back: z.string().min(1, "Pole 'back' nie może być puste.").optional(),
-  ai_modified_by_user: z.boolean().optional(),
-  ai_approval_status: z.enum(["approved", "rejected", "pending"]).optional(), // Dostosuj enum do swoich potrzeb
-}).refine(data => Object.keys(data).length > 0, {
-  message: "Przynajmniej jedno pole musi być dostarczone do aktualizacji."
-});
+const FlashcardUpdateSchema = z
+  .object({
+    front: z.string().min(1, "Pole 'front' nie może być puste.").optional(),
+    back: z.string().min(1, "Pole 'back' nie może być puste.").optional(),
+    ai_modified_by_user: z.boolean().optional(),
+    ai_approval_status: z.enum(["approved", "rejected", "pending"]).optional(), // Dostosuj enum do swoich potrzeb
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Przynajmniej jedno pole musi być dostarczone do aktualizacji.",
+  });
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   const supabase = locals.supabase as SupabaseClient;
@@ -28,7 +30,10 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response("Brak ID fiszki.", { status: 400 });
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) {
     return new Response("Brak autoryzacji.", { status: 401 });
   }
@@ -48,27 +53,27 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     console.error("Błąd podczas parsowania JSON dla PUT flashcard:", error);
     return new Response("Nieprawidłowy format danych JSON.", { status: 400 });
   }
-  
+
   try {
-    const { updatedFlashcard, error: serviceError } = await updateFlashcard(
-      supabase,
-      user.id,
-      flashcardId,
-      updates
-    );
+    const { updatedFlashcard, error: serviceError } = await updateFlashcard(supabase, user.id, flashcardId, updates);
 
     if (serviceError) {
       console.error(`Błąd podczas aktualizacji fiszki ${flashcardId}:`, serviceError);
-      const errorMessage = typeof serviceError === 'string' ? serviceError : (serviceError as Error).message || "Nie można zaktualizować fiszki.";
+      const errorMessage =
+        typeof serviceError === "string"
+          ? serviceError
+          : (serviceError as Error).message || "Nie można zaktualizować fiszki.";
       // Sprawdzenie czy błąd to "Flashcard not found or user mismatch."
       const status = errorMessage.includes("not found or user mismatch") ? 404 : 500;
       return new Response(errorMessage, { status });
     }
 
     if (!updatedFlashcard) {
-        // To nie powinno się zdarzyć jeśli serviceError jest null
-        console.error(`Aktualizacja fiszki ${flashcardId} nie zwróciła danych mimo braku błędu.`);
-        return new Response("Nie udało się zaktualizować fiszki, nie otrzymano zaktualizowanych danych.", { status: 500 });
+      // To nie powinno się zdarzyć jeśli serviceError jest null
+      console.error(`Aktualizacja fiszki ${flashcardId} nie zwróciła danych mimo braku błędu.`);
+      return new Response("Nie udało się zaktualizować fiszki, nie otrzymano zaktualizowanych danych.", {
+        status: 500,
+      });
     }
 
     return new Response(JSON.stringify(updatedFlashcard), {
@@ -93,7 +98,10 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return new Response("Brak ID fiszki.", { status: 400 });
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) {
     return new Response("Brak autoryzacji.", { status: 401 });
   }
@@ -103,7 +111,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     if (!success || serviceError) {
       console.error(`Błąd podczas usuwania fiszki ${flashcardId}:`, serviceError);
-      const errorMessage = typeof serviceError === 'string' ? serviceError : (serviceError as Error).message || "Nie można usunąć fiszki.";
+      const errorMessage =
+        typeof serviceError === "string" ? serviceError : (serviceError as Error).message || "Nie można usunąć fiszki.";
       const status = errorMessage.includes("not found or permission denied") ? 404 : 500;
       return new Response(errorMessage, { status });
     }
@@ -113,4 +122,4 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     console.error(`Nieoczekiwany błąd serwera dla DELETE /api/flashcards/${flashcardId}:`, e);
     return new Response("Wystąpił wewnętrzny błąd serwera.", { status: 500 });
   }
-}; 
+};

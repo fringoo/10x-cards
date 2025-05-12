@@ -44,9 +44,9 @@ export async function getGlobalFlashcardStats(
     // For simplicity, we can derive this or query explicitly if more sources exist.
     // Let's query for 'manual' explicitly for clarity, or adjust if 'source' can be other things.
     const { count: manualFlashcards, error: manualError } = await supabase
-        .from("flashcards")
-        .select("*", { count: "exact", head: true })
-        .eq("source", "manual"); // Assuming 'manual' is the other main type
+      .from("flashcards")
+      .select("*", { count: "exact", head: true })
+      .eq("source", "manual"); // Assuming 'manual' is the other main type
     if (manualError) throw manualError;
     // Note: totalFlashcards might not be aiFlashcards + manualFlashcards if other sources exist or source is null.
     // For this MVP, we will assume these are the two primary distinct sources.
@@ -68,7 +68,6 @@ export async function getGlobalFlashcardStats(
     };
     console.log("[StatisticsService] Successfully fetched flashcard stats:", stats);
     return { data: stats, error: null };
-
   } catch (e: any) {
     console.error("[StatisticsService] Error fetching global flashcard stats:", e);
     return { data: null, error: e.message || "An unexpected error occurred." };
@@ -93,9 +92,8 @@ export async function getGlobalEngagementStats(
     };
     console.log("[StatisticsService] Successfully fetched engagement stats:", stats);
     return { data: stats, error: null };
-
   } catch (e: any) {
     console.error("[StatisticsService] Error fetching global engagement stats:", e);
     return { data: null, error: e.message || "An unexpected error occurred." };
   }
-} 
+}

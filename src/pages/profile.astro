@@ -1,6 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 // Pobranie danych użytkownika. Zakładamy, że middleware Supabase jest aktywny.
 const { user } = Astro.locals;
@@ -9,7 +9,7 @@ const isAuthenticated = !!user;
 // Jeśli użytkownik nie jest zalogowany, można go przekierować lub wyświetlić stosowny komunikat.
 // Dla uproszczenia, jeśli nie ma middleware, który by to robił, można dodać przekierowanie tutaj.
 if (!isAuthenticated) {
-  return Astro.redirect('/auth/login'); // Przekieruj na stronę logowania
+  return Astro.redirect("/auth/login"); // Przekieruj na stronę logowania
 }
 
 const userEmail = user?.email || "Nie udało się załadować adresu email.";
@@ -17,7 +17,7 @@ const userEmail = user?.email || "Nie udało się załadować adresu email.";
 // TODO: Zweryfikować docelowy URL dla zmiany/resetu hasła dla zalogowanego użytkownika.
 // Może to być standardowa funkcjonalność Supabase UI lub dedykowana strona.
 // Na razie linkujemy do ogólnej strony resetowania hasła.
-const changePasswordUrl = "/auth/reset-password"; 
+const changePasswordUrl = "/auth/reset-password";
 ---
 
 <Layout title="Mój Profil">
@@ -52,4 +52,4 @@ const changePasswordUrl = "/auth/reset-password";
   .text-card-foreground {
     color: hsl(var(--card-foreground)); /* Użycie zmiennej CSS dla tekstu karty z Shadcn/ui */
   }
-</style> 
+</style>

@@ -13,8 +13,8 @@ interface ImportMeta {
 
 declare namespace App {
   interface Locals {
-    supabase: import('@supabase/supabase-js').SupabaseClient;
-    user: import('@supabase/supabase-js').User | null;
+    supabase: import("@supabase/supabase-js").SupabaseClient;
+    user: import("@supabase/supabase-js").User | null;
     // session: import('@supabase/supabase-js').Session | null; // Opcjonalnie, jeśli potrzebna cała sesja
     // Można tu dodać inne właściwości do Astro.locals
   }
