@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "install:clean": "rm -rf node_modules package-lock.json && npm install",
-    "install:force": "npm install --force"
+    "install:force": "npm install --force",
+    "test": "vitest run"
   },
   "dependencies": {
     "@astrojs/node": "^9.2.1",
@@ -48,6 +49,7 @@
     "@eslint/js": "9.23.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@typescript-eslint/eslint-plugin": "8.28.0",
     "@typescript-eslint/parser": "8.28.0",
     "eslint": "9.23.0",
