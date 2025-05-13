@@ -111,7 +111,7 @@ const AIGenerateForm = (/*{ onFlashcardsGenerated }*/) => {
         </div>
       )}
 
-      <Button type="submit" disabled={isLoading || charCount < MIN_CHARS || charCount > MAX_CHARS} className="w-full">
+      <Button type="submit" variant="default" disabled={isLoading || charCount < MIN_CHARS || charCount > MAX_CHARS} className="w-full">
         {isLoading ? (
           <>
             <svg

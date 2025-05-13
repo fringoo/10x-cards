@@ -258,6 +258,33 @@ const CollectionManager: React.FC = () => {
 
       {isLoadingFlashcards && <div className="text-center p-4">Ładowanie fiszek...</div>}
 
+      {!isLoadingFlashcards && !selectedCollectionId && collections.length > 0 && (
+        <div className="text-center py-10 bg-muted/30 p-6 rounded-lg border border-dashed mt-4">
+                  <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="mx-auto mb-4 text-muted-foreground"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+          <h3 className="text-xl font-semibold text-muted-foreground mb-2">Wybierz kolekcję fiszek</h3>
+          <p className="text-muted-foreground">
+            Wybierz kolekcję z listy powyżej, aby przejrzeć zapisane w niej fiszki.
+          </p>
+        </div>
+      )}
+
       {!isLoadingFlashcards && selectedCollectionId && flashcards.length === 0 && (
         <div className="text-center py-10 bg-muted/30 p-6 rounded-lg border border-dashed mt-4">
           <h3 className="text-xl font-semibold text-muted-foreground mb-2">Brak fiszek w tej kolekcji</h3>
@@ -335,14 +362,14 @@ const CollectionManager: React.FC = () => {
                 {editingFlashcard?.id === fc.id ? (
                   <div className="flex justify-end space-x-2 mt-2">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={handleCancelEdit}
                       disabled={updatingFlashcardId === fc.id}
                     >
                       Anuluj
                     </Button>
-                    <Button size="sm" onClick={handleSaveEdit} disabled={updatingFlashcardId === fc.id}>
+                    <Button size="sm" onClick={handleSaveEdit} disabled={updatingFlashcardId === fc.id} variant="default">
                       {updatingFlashcardId === fc.id && editingFlashcard ? "Zapisywanie..." : "Zapisz"}
                     </Button>
                   </div>
@@ -350,7 +377,7 @@ const CollectionManager: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex justify-end space-x-2">
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => handleEditClick(fc)}
                         disabled={!!updatingFlashcardId}
@@ -369,18 +396,15 @@ const CollectionManager: React.FC = () => {
                     {fc.source === "ai" && (
                       <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
                         <Button
-                          variant={fc.ai_approval_status === "accepted" ? "default" : "outline"}
+                          variant="default"
                           size="sm"
                           onClick={() => handleApprovalStatusChange(fc.id, "accepted")}
                           disabled={!!updatingFlashcardId || fc.ai_approval_status === "accepted"}
-                          className={
-                            fc.ai_approval_status === "accepted" ? "bg-green-600 hover:bg-green-700 text-white" : ""
-                          }
                         >
                           {updatingFlashcardId === fc.id ? "..." : "Zaakceptuj"}
                         </Button>
                         <Button
-                          variant={fc.ai_approval_status === "rejected" ? "destructive" : "outline"}
+                          variant="destructive"
                           size="sm"
                           onClick={() => handleApprovalStatusChange(fc.id, "rejected")}
                           disabled={!!updatingFlashcardId || fc.ai_approval_status === "rejected"}

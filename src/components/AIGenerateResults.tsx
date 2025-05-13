@@ -218,20 +218,15 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
           strokeLinejoin="round"
           className="mx-auto mb-4 text-muted-foreground"
         >
-          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-          <path d="M12 2L12 4"></path>
-          <path d="M12 20L12 22"></path>
-          <path d="M20 12L22 12"></path>
-          <path d="M2 12L4 12"></path>
-          <path d="M18.3645 18.3645L19.7787 19.7787"></path>
-          <path d="M4.2218 4.2218L5.63601 5.63601"></path>
-          <path d="M18.3645 5.63601L19.7787 4.2218"></path>
-          <path d="M4.2218 19.7787L5.63601 18.3645"></path>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        <h3 className="text-xl font-semibold text-muted-foreground mb-2">No Flashcards Yet</h3>
-        <p className="text-muted-foreground">
-          Your generated flashcards will appear here once you submit some text above.
+        <h3 className="text-xl font-semibold text-muted-foreground mb-2">Brak Fiszek</h3>
+        <p className="text-sm text-muted-foreground">
+          Aby wygenerować swoje fiszki wprowadź tekst źródłowy powyżej.
         </p>
       </div>
     );
@@ -276,7 +271,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
         <div className="space-y-2 mb-4 flex flex-wrap gap-2">
           <Button
             onClick={() => openSaveDialog("accepted")}
-            variant="outline"
+            variant="default"
             size="sm"
             disabled={flashcards.filter((f) => f.approvalStatus === "accepted").length === 0 || isSaving}
           >
@@ -318,7 +313,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isSaving}>
+              <Button type="button" variant="default" disabled={isSaving}>
                 Anuluj
               </Button>
             </DialogClose>
@@ -425,7 +420,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
             <div className="p-3 border-t flex-shrink-0 flex justify-end space-x-2 bg-muted/30">
               {editingFlashcardIndex === index ? (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
+                  <Button variant="default" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
                     Anuluj
                   </Button>
                   <Button
@@ -440,7 +435,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
               ) : (
                 <>
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleApprovalChange(index, "rejected")}
                     disabled={card.approvalStatus === "rejected" || isSaving}
@@ -448,7 +443,7 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     {card.approvalStatus === "rejected" ? "Odrzucona" : "Odrzuć"}
                   </Button>
                   <Button
-                    variant="secondary"
+                    variant="default"
                     size="sm"
                     onClick={() => handleEditClick(index)}
                     disabled={card.approvalStatus === "accepted" || card.approvalStatus === "rejected" || isSaving}
