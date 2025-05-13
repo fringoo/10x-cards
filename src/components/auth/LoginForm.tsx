@@ -69,8 +69,7 @@ const LoginForm: React.FC = () => {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Logowanie</CardTitle>
+      <CardHeader className="text-center">
         <CardDescription>Zaloguj się, aby uzyskać dostęp do aplikacji.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -80,7 +79,7 @@ const LoginForm: React.FC = () => {
             <Input id="email" type="email" placeholder="jan.kowalski@example.com" {...register("email")} />
             {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mb-2">
             <Label htmlFor="password">Hasło</Label>
             <Input id="password" type="password" {...register("password")} />
             {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}

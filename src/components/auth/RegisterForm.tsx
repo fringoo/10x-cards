@@ -91,8 +91,7 @@ const RegisterForm: React.FC = () => {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Rejestracja</CardTitle>
+      <CardHeader className="text-center">
         <CardDescription>Załóż nowe konto, aby korzystać z aplikacji.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -107,7 +106,7 @@ const RegisterForm: React.FC = () => {
             <Input id="password" type="password" {...register("password")} />
             {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mb-2">
             <Label htmlFor="confirmPassword">Powtórz Hasło</Label>
             <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
             {errors.confirmPassword && <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>}
