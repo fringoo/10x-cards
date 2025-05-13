@@ -29,14 +29,12 @@ const changePasswordUrl = "/auth/change-passwd";
           <p class="text-sm font-medium text-muted-foreground">Adres e-mail:</p>
           <p class="text-lg">{userEmail}</p>
         </div>
-        <div>
-          <a href={changePasswordUrl} class="w-full">
+        <div class="flex space-x-4 mt-6">
+          <a href={changePasswordUrl} class="flex-1">
             <Button variant="default" class="w-full">Zmień Hasło</Button>
           </a>
-        </div>
-        <div class="mt-6 text-center">
-          <form method="POST" action="/auth/logout">
-            <Button type="submit" variant="default">Wyloguj się</Button>
+          <form method="POST" action="/auth/logout" class="flex-1">
+            <Button type="submit" variant="default" class="w-full">Wyloguj się</Button>
           </form>
         </div>
       </div>
