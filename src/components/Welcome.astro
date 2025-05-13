@@ -1,31 +1,35 @@
+---
+import { Button } from "@/components/ui/button";
+const { user } = Astro.locals;
+const isAuthenticated = !!user;
+---
 <div
   class="relative w-full mx-auto min-h-[calc(100vh-var(--navbar-height)-var(--footer-height))] flex items-center justify-center p-4 sm:p-8"
 >
   <div
-    class="relative max-w-2xl mx-auto backdrop-blur-lg bg-white/10 rounded-2xl shadow-2xl p-8 sm:p-12 text-white border border-white/20 text-center"
+    class="relative max-w-2xl mx-auto backdrop-blur-lg bg-card rounded-2xl shadow-2xl p-8 sm:p-12 border text-center"
   >
     <div class="space-y-6">
       <h1
-        class="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 text-transparent bg-clip-text drop-shadow-lg"
+        class="text-5xl sm:text-6xl font-bold bg-clip-text drop-shadow-lg"
       >
         Witaj w 10x Cards!
       </h1>
-      <p class="text-lg sm:text-xl text-blue-100/90 drop-shadow-md leading-relaxed">
+      <p class="text-lg sm:text-xl drop-shadow-md leading-relaxed">
         Twoje inteligentne centrum nauki i tworzenia fiszek. <br class="hidden sm:block" />
         Z łatwością generuj fiszki (również z pomocą AI!), organizuj je i przyswajaj wiedzę efektywniej niż kiedykolwiek
         wcześniej.
       </p>
-      <div class="pt-4">
-        <a
-          href="/auth/register"
-          class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-        >
-          Rozpocznij naukę – Zarejestruj się!
-        </a>
-        <p class="mt-4 text-sm text-blue-200/80">
-          Masz już konto? <a href="/auth/login" class="font-semibold hover:underline">Zaloguj się tutaj</a>.
-        </p>
-      </div>
+      {!isAuthenticated && (
+        <div class="pt-4">
+          <p class="mt-4 text-sm">
+          Rozpocznij naukę – <a href="/auth/register" class="font-semibold hover:underline text-primary">Zarejestruj się!</a>
+          </p>
+          <p class="mt-4 text-sm">
+            Masz już konto? <a href="/auth/login" class="font-semibold hover:underline text-primary">Zaloguj się tutaj</a>.
+          </p>
+        </div>
+      )}
     </div>
   </div>
 </div>
