@@ -12,10 +12,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/setupTests.ts"],
     coverage: {
-      provider: "v8",
-      reporter: ["text", "json-summary", "html"],
-      reportsDirectory: "./coverage",
-      exclude: ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/.astro/**"],
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.astro/**'],
     },
   },
 });
