@@ -17,11 +17,11 @@ const userEmail = user?.email || "Nie udało się załadować adresu email.";
 // TODO: Zweryfikować docelowy URL dla zmiany/resetu hasła dla zalogowanego użytkownika.
 // Może to być standardowa funkcjonalność Supabase UI lub dedykowana strona.
 // Na razie linkujemy do ogólnej strony resetowania hasła.
-const changePasswordUrl = "/auth/reset-password";
+const changePasswordUrl = "/auth/change-passwd";
 ---
 
 <Layout title="Mój Profil">
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto py-8 px-4">
     <div class="max-w-md mx-auto bg-card p-8 rounded-lg shadow-md">
       <h1 class="text-3xl font-bold mb-6 text-center">Mój Profil</h1>
       <div class="space-y-4">
@@ -30,7 +30,7 @@ const changePasswordUrl = "/auth/reset-password";
           <p class="text-lg">{userEmail}</p>
         </div>
         <div>
-          <a href="/auth/change-password" class="w-full">
+          <a href={changePasswordUrl} class="w-full">
             <Button variant="outline" class="w-full">Zmień Hasło</Button>
           </a>
         </div>

@@ -1,5 +1,5 @@
 ---
-import MainLayout from "@/layouts/Layout.astro";
+import Layout from "@/layouts/Layout.astro";
 import AIGenerateForm from "@/components/AIGenerateForm.tsx";
 import AIGenerateResults from "@/components/AIGenerateResults.tsx";
 // import { useState } from "react"; // Removed: unused
@@ -13,7 +13,7 @@ let initialFlashcards: GeneratedFlashcardDTO[] = []; // Renamed for clarity, wil
 // };
 ---
 
-<MainLayout title="Generuj Fiszki AI">
+<Layout title="Generuj Fiszki AI">
   <div class="container mx-auto py-8 px-4">
     <h1 class="text-3xl font-bold mb-6 text-center">Generowanie Fiszki AI</h1>
     <div class="grid grid-cols-1 gap-8">
@@ -22,7 +22,7 @@ let initialFlashcards: GeneratedFlashcardDTO[] = []; // Renamed for clarity, wil
       <AIGenerateResults client:load generatedFlashcards={initialFlashcards} />
     </div>
   </div>
-</MainLayout>
+</Layout>
 
 <script>
   // generate.astro client script placeholder console.log("generate.astro client script loaded.");
