@@ -1,0 +1,32 @@
+name: Run unit tests on main branch
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Unit testy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Uruchomienie testów z pokryciem
+        run: npx vitest run --coverage
+        
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14 
