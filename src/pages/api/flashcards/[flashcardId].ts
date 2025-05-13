@@ -12,7 +12,7 @@ const FlashcardUpdateSchema = z
     front: z.string().min(1, "Pole 'front' nie może być puste.").optional(),
     back: z.string().min(1, "Pole 'back' nie może być puste.").optional(),
     ai_modified_by_user: z.boolean().optional(),
-    ai_approval_status: z.enum(["approved", "rejected", "pending"]).optional(), // Dostosuj enum do swoich potrzeb
+    ai_approval_status: z.enum(["accepted", "rejected", "pending"]).optional(), // Dostosuj enum do swoich potrzeb
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "Przynajmniej jedno pole musi być dostarczone do aktualizacji.",

@@ -56,7 +56,7 @@ export async function getGlobalFlashcardStats(
       .from("flashcards")
       .select("*", { count: "exact", head: true })
       .eq("source", "ai")
-      .eq("ai_approval_status", "approved");
+      .eq("ai_approval_status", "accepted");
     if (acceptedError) throw acceptedError;
 
     const stats: GlobalFlashcardStats = {

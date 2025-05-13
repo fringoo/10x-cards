@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // --- Enums ---
 export type FlashcardSource = "ai" | "manual";
-export type ApprovalStatus = "approved" | "rejected" | "pending";
+export type ApprovalStatus = "accepted" | "rejected" | "pending";
 export type ReviewStatus = "correct" | "incorrect";
 
 // --- User / Auth DTOs ---

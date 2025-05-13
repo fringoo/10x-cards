@@ -26,6 +26,8 @@ interface EditingFlashcardState {
   back: string;
 }
 
+type ShadcnBadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
 const CollectionManager: React.FC = () => {
   const [collections, setCollections] = useState<CollectionBasicInfo[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
@@ -164,7 +166,7 @@ const CollectionManager: React.FC = () => {
     }
   };
 
-  const handleApprovalStatusChange = async (flashcardId: string, newStatus: "approved" | "rejected") => {
+  const handleApprovalStatusChange = async (flashcardId: string, newStatus: "accepted" | "rejected") => {
     setError(null);
     setUpdatingFlashcardId(flashcardId);
     try {
@@ -187,6 +189,13 @@ const CollectionManager: React.FC = () => {
     } finally {
       setUpdatingFlashcardId(null);
     }
+  };
+
+  const getBadgeVariantForStatus = (_status: string | null): ShadcnBadgeVariant => {
+    // We use className to provide specific styling, so we can return a consistent variant like "outline"
+    // or decide based on status if a specific base variant structure is preferred before className overrides.
+    // For simplicity, let's use "outline" as a base for all custom-styled badges.
+    return "outline";
   };
 
   // --- Renderowanie ---
@@ -273,20 +282,20 @@ const CollectionManager: React.FC = () => {
                 <div className="flex space-x-2 pt-1 flex-wrap gap-y-1">
                   {fc.source === "ai" && (
                     <Badge
-                      variant={
-                        fc.ai_approval_status === "rejected"
-                          ? "destructive"
-                          : fc.ai_approval_status === "pending" || !fc.ai_approval_status
-                            ? "secondary"
-                            : "default"
-                      }
+                      variant={getBadgeVariantForStatus(fc.ai_approval_status)}
                       className={
-                        fc.ai_approval_status === "approved"
+                        fc.ai_approval_status === "accepted"
                           ? "bg-green-100 text-green-700 border border-green-300"
-                          : ""
+                          : fc.ai_approval_status === "rejected"
+                            ? "bg-red-100 text-red-700 border border-red-300"
+                            : fc.ai_approval_status === "pending"
+                              ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                              : ""
                       }
                     >
-                      AI: {fc.ai_approval_status || "pending"}
+                      AI: {fc.ai_approval_status === "accepted" && "Zaakceptowana"}
+                      {fc.ai_approval_status === "rejected" && "Odrzucona"}
+                      {fc.ai_approval_status === "pending" && "Oczekująca"}
                     </Badge>
                   )}
                   {fc.ai_modified_by_user && <Badge variant="outline">Zmodyfikowana</Badge>}
@@ -360,12 +369,12 @@ const CollectionManager: React.FC = () => {
                     {fc.source === "ai" && (
                       <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
                         <Button
-                          variant={fc.ai_approval_status === "approved" ? "default" : "outline"}
+                          variant={fc.ai_approval_status === "accepted" ? "default" : "outline"}
                           size="sm"
-                          onClick={() => handleApprovalStatusChange(fc.id, "approved")}
-                          disabled={!!updatingFlashcardId || fc.ai_approval_status === "approved"}
+                          onClick={() => handleApprovalStatusChange(fc.id, "accepted")}
+                          disabled={!!updatingFlashcardId || fc.ai_approval_status === "accepted"}
                           className={
-                            fc.ai_approval_status === "approved" ? "bg-green-600 hover:bg-green-700 text-white" : ""
+                            fc.ai_approval_status === "accepted" ? "bg-green-600 hover:bg-green-700 text-white" : ""
                           }
                         >
                           {updatingFlashcardId === fc.id ? "..." : "Zaakceptuj"}
