@@ -17,7 +17,7 @@ const userEmail = user?.email || "Nie udało się załadować adresu email.";
 // TODO: Zweryfikować docelowy URL dla zmiany/resetu hasła dla zalogowanego użytkownika.
 // Może to być standardowa funkcjonalność Supabase UI lub dedykowana strona.
 // Na razie linkujemy do ogólnej strony resetowania hasła.
-const changePasswordUrl = "/auth/change-passwd";
+const changePasswordUrl = "/error-not-implemented"; // Zmieniono na stronę błędu
 ---
 
 <Layout title="Mój Profil">
@@ -33,9 +33,7 @@ const changePasswordUrl = "/auth/change-passwd";
           <a href={changePasswordUrl} class="flex-1">
             <Button variant="default" class="w-full">Zmień Hasło</Button>
           </a>
-          <form method="POST" action="/auth/logout" class="flex-1">
-            <Button type="submit" variant="default" class="w-full">Wyloguj się</Button>
-          </form>
+          <Button id="logout-button-profile" variant="default" class="w-full flex-1">Wyloguj się</Button>
         </div>
       </div>
     </div>
@@ -46,3 +44,25 @@ const changePasswordUrl = "/auth/change-passwd";
   /* Dodatkowe style, jeśli potrzebne */
   /* Usunięto lokalne definicje .bg-card i .text-card-foreground */
 </style>
+
+<script>
+  // Prosta obsługa wylogowania po stronie klienta
+  async function handleLogout(event: Event) {
+    event.preventDefault();
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      if (response.ok) {
+        window.location.href = "/"; // Przekieruj na stronę główną po wylogowaniu
+      } else {
+        console.error("Błąd podczas wylogowywania ze strony profilu");
+        // Można dodać powiadomienie dla użytkownika
+      }
+    } catch (error) {
+      console.error("Błąd sieci podczas wylogowywania ze strony profilu", error);
+    }
+  }
+
+  document.getElementById("logout-button-profile")?.addEventListener("click", handleLogout);
+</script>
