@@ -1,0 +1,28 @@
+---
+import Layout from "@/layouts/Layout.astro";
+---
+  <div class="container mx-auto py-8 px-4 flex items-center justify-center min-h-[calc(100vh-var(--navbar-height)-var(--footer-height))]">
+    <div class="relative max-w-2xl w-full bg-card rounded-2xl shadow-2xl p-8 sm:p-12 border text-center">
+      <div class="space-y-6">
+        <h1 class="text-5xl sm:text-6xl font-bold drop-shadow-lg">
+          Ooops...
+        </h1>
+        <p class="text-lg sm:text-xl text-card-foreground drop-shadow-md leading-relaxed">
+          Przepraszamy! Ta funkcja nie została zaimplementowana w ramach MVP.
+        </p>
+        {/* Można dodać przycisk powrotu na stronę główną, jeśli potrzeba */}
+        <div class="pt-4">
+          <a href="/" class="inline-block bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+            Wróć na stronę główną
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<style>
+  :root {
+    --navbar-height: 64px; /* Approximate height of NavBar, adjust if needed */
+    --footer-height: 60px; /* Approximate height of Footer, adjust if needed */
+  }
+</style>

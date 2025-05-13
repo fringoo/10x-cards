@@ -9,7 +9,7 @@ const isAdmin = user?.app_metadata?.role === "admin"; // Przykładowe sprawdzeni
 <nav class="bg-gray-800 text-white p-4">
   <div class="container mx-auto flex justify-between items-center">
     <div class="text-lg font-bold">
-      <a href="/">10x Cards by fringoo</a>
+      <a href="/">10x Cards (MVP) by fringoo</a>
     </div>
 
     {/* Desktop Menu - hidden on small screens */}
@@ -38,7 +38,7 @@ const isAdmin = user?.app_metadata?.role === "admin"; // Przykładowe sprawdzeni
             <a href="/manage-collections" class="px-3 py-2 rounded hover:bg-gray-700">
               Moje fiszki
             </a>
-            <a href="/sessions/new" class="px-3 py-2 rounded hover:bg-gray-700">
+            <a href="/error-not-implemented" class="px-3 py-2 rounded hover:bg-gray-700">
               Nauka
             </a>
             <a href="/statistics" class="px-3 py-2 rounded hover:bg-gray-700">
@@ -105,7 +105,7 @@ const isAdmin = user?.app_metadata?.role === "admin"; // Przykładowe sprawdzeni
             <a href="/manage-collections" class="block px-3 py-2 rounded hover:bg-gray-700">
               Moje fiszki
             </a>
-            <a href="/sessions/new" class="block px-3 py-2 rounded hover:bg-gray-700">
+            <a href="/error-not-implemented" class="block px-3 py-2 rounded hover:bg-gray-700">
               Nauka
             </a>
             <a href="/statistics" class="block px-3 py-2 rounded hover:bg-gray-700">
@@ -114,11 +114,6 @@ const isAdmin = user?.app_metadata?.role === "admin"; // Przykładowe sprawdzeni
             <a href="/profile" class="block px-3 py-2 rounded hover:bg-gray-700">
               Profil
             </a>
-            {isAdmin && (
-              <a href="/admin/metrics" class="block px-3 py-2 rounded hover:bg-gray-700">
-                Panel admina
-              </a>
-            )}
             <span class="block px-3 py-2">Witaj, {user.email || user.id}</span>
             <a href="#" id="logout-button-mobile" class="block px-3 py-2 rounded hover:bg-gray-700">
               Wyloguj się
