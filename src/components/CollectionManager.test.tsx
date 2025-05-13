@@ -159,7 +159,7 @@ describe("CollectionManager", () => {
     });
 
     // Sprawdzamy czy badge AI jest wyświetlany dla drugiej fiszki
-    const aiBadge = await screen.findByText("AI: pending");
+    const aiBadge = await screen.findByText("AI: Oczekująca");
     expect(aiBadge).toBeInTheDocument();
   });
 
