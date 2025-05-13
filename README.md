@@ -4,7 +4,7 @@
 
 An AI-powered flashcard application for efficient learning through spaced repetition.
 
-**Important Note:** This project was primarily developed as a learning exercise to explore AI-assisted programming and advanced prompting techniques. As such, its focus was on the development process and experimentation rather than creating a fully-featured, production-ready application. This may result in limited functionality and user experience characteristics.
+**Important Note:** This project was primarily developed as a learning exercise to explore AI-assisted programming and advanced prompting techniques. As such, its focus was on the development process and experimentation rather than creating a fully-featured, production-ready application. Furthermore, it marked the author's first engagement with this particular technology stack after a multi-year hiatus from programming.
 
 
 ## Table of Contents
