@@ -225,7 +225,7 @@ const CollectionManager: React.FC = () => {
           onValueChange={(value: string) => setSelectedCollectionId(value === "" ? null : value)}
           disabled={collections.length === 0 || isLoadingCollections}
         >
-          <SelectTrigger id="collection-select" className="w-full md:w-[300px] mt-1">
+          <SelectTrigger id="collection-select" className="w-full md:w-[300px] mt-1 bg-card">
             <SelectValue placeholder="Wybierz kolekcję..." />
           </SelectTrigger>
           <SelectContent>
