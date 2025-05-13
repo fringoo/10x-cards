@@ -293,9 +293,9 @@ const CollectionManager: React.FC = () => {
       )}
 
       {flashcards.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
           {flashcards.map((fc) => (
-            <Card key={fc.id} className="flex flex-col">
+            <Card key={fc.id} className="flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="pb-3">
                 {editingFlashcard?.id === fc.id ? (
                   <CardTitle className="text-lg">Edytujesz fiszkę...</CardTitle>
@@ -374,27 +374,9 @@ const CollectionManager: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleEditClick(fc)}
-                        disabled={!!updatingFlashcardId}
-                      >
-                        Edytuj
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteClick(fc.id)}
-                        disabled={!!updatingFlashcardId}
-                      >
-                        {updatingFlashcardId === fc.id && !editingFlashcard ? "Usuwanie..." : "Usuń"}
-                      </Button>
-                    </div>
+                  <div className="flex justify-end space-x-2">
                     {fc.source === "ai" && (
-                      <div className="flex justify-end space-x-2 pt-2 border-t mt-2">
+                      <>
                         <Button
                           variant="default"
                           size="sm"
@@ -411,8 +393,24 @@ const CollectionManager: React.FC = () => {
                         >
                           {updatingFlashcardId === fc.id ? "..." : "Odrzuć"}
                         </Button>
-                      </div>
+                      </>
                     )}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleEditClick(fc)}
+                      disabled={!!updatingFlashcardId}
+                    >
+                      Edytuj
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(fc.id)}
+                      disabled={!!updatingFlashcardId}
+                    >
+                      {updatingFlashcardId === fc.id && !editingFlashcard ? "Usuwanie..." : "Usuń"}
+                    </Button>
                   </div>
                 )}
               </div>

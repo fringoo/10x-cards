@@ -435,6 +435,14 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
               ) : (
                 <>
                   <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleApprovalChange(index, "accepted")}
+                    disabled={card.approvalStatus === "accepted" || isSaving}
+                  >
+                    {card.approvalStatus === "accepted" ? "Zaakceptowana" : "Zaakceptuj"}
+                  </Button>
+                  <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleApprovalChange(index, "rejected")}
@@ -449,14 +457,6 @@ const AIGenerateResults: React.FC<AIGenerateResultsProps> = ({ generatedFlashcar
                     disabled={card.approvalStatus === "accepted" || card.approvalStatus === "rejected" || isSaving}
                   >
                     Edytuj
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handleApprovalChange(index, "accepted")}
-                    disabled={card.approvalStatus === "accepted" || isSaving}
-                  >
-                    {card.approvalStatus === "accepted" ? "Zaakceptowana" : "Zaakceptuj"}
                   </Button>
                 </>
               )}
